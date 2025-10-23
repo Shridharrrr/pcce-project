@@ -51,7 +51,7 @@ const ChatInterface = ({ selectedProject }) => {
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/messages/${selectedProject.teamId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.2:8000'}/messages/${selectedProject.teamId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -199,7 +199,7 @@ const ChatInterface = ({ selectedProject }) => {
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/messages/`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.2:8000'}/messages/`,
         {
           method: 'POST',
           headers: {

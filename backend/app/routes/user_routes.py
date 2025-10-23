@@ -98,7 +98,7 @@ async def get_current_user_teams(current_user: dict = Depends(get_current_user))
     return teams
 
 @router.get("/{user_id}/teams")
-async def get_user_teams(user_id: str, current_user: dict = Depends(get_current_user)):
+async def get_specific_user_teams(user_id: str, current_user: dict = Depends(get_current_user)):
     """Get all teams for a specific user"""
     user = get_document("users", user_id)
     if not user:

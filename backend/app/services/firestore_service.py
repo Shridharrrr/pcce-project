@@ -57,10 +57,23 @@ def get_team_messages(team_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Get messages for a specific team, ordered by creation time"""
     if db is None:
         raise Exception("Firestore not configured")
-    messages_ref = db.collection("messages").where("teamId", "==", team_id)
-    messages_ref = messages_ref.order_by("created_at", direction="DESCENDING").limit(limit)
-    docs = messages_ref.stream()
-    return [doc.to_dict() for doc in docs]
+    try:
+        messages_ref = db.collection("messages").where("teamId", "==", team_id)
+        messages_ref = messages_ref.order_by("created_at", direction="DESCENDING").limit(limit)
+        docs = messages_ref.stream()
+        messages = [doc.to_dict() for doc in docs]
+        # Sort in ascending order (oldest first) for chat display
+        return list(reversed(messages))
+    except Exception as e:
+        print(f"Error fetching messages: {e}")
+        # If index doesn't exist or other error, try without ordering
+        try:
+            messages_ref = db.collection("messages").where("teamId", "==", team_id).limit(limit)
+            docs = messages_ref.stream()
+            return [doc.to_dict() for doc in docs]
+        except Exception as e2:
+            print(f"Error fetching messages without order: {e2}")
+            return []
 
 def get_user_teams(user_id: str) -> List[Dict[str, Any]]:
     """Get all teams a user is a member of"""

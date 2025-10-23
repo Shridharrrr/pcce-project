@@ -84,22 +84,13 @@ export default function Dashboard() {
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Planora</h1>
-              <div className="ml-4 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
-                Demo Mode
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">WorkSpace Hub</h1>
               <nav className="ml-8 flex space-x-4">
                 <Link
                   href="/dashboard"
                   className="text-blue-600 font-medium border-b-2 border-blue-600 px-3 py-2"
                 >
                   Dashboard
-                </Link>
-                <Link
-                  href="/my-quotes"
-                  className="text-gray-500 hover:text-gray-700 px-3 py-2"
-                >
-                  My Quotes
                 </Link>
                 <Link
                   href="/profile"

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Planora - Education Planning Platform",
-  description: "Plan your child's future education with confidence",
+  title: "WorkSpace Hub - Team Collaboration Platform",
+  description: "Collaborate seamlessly with your team in real-time",
 };
 
 export default function RootLayout({ children }) {

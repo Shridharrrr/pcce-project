@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from app.models.message import Message, MessageCreate, MessageUpdate, MessageStatus
 from app.services.firestore_service import (
-    create_document, get_document, get_team_messages, 
+    create_document, get_document, get_team_messages as fetch_team_messages, 
     update_document, delete_document, get_user_by_email
 )
 from app.dependencies.auth import get_current_user
@@ -32,9 +32,20 @@ async def create_message(
     if not is_member:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     
-    # Get user info for sender details
+    # Get or create user info for sender details
     user_info = get_user_by_email(user_email)
-    sender_name = user_info.get("name", user_email.split("@")[0]) if user_info else user_email.split("@")[0]
+    if not user_info:
+        # Auto-create user profile if it doesn't exist
+        user_info = {
+            "userId": user_id,
+            "name": current_user.get("name", user_email.split("@")[0]),
+            "email": user_email,
+            "myTeams": [],
+            "created_at": datetime.utcnow()
+        }
+        create_document("users", user_id, user_info)
+    
+    sender_name = user_info.get("name", user_email.split("@")[0])
     
     message_id = str(uuid.uuid4())
     message = Message(
@@ -78,7 +89,7 @@ async def get_team_messages(
     if not is_member:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     
-    messages = get_team_messages(team_id, limit)
+    messages = fetch_team_messages(team_id, limit)
     return messages
 
 @router.put("/{message_id}", response_model=Message)
@@ -201,9 +212,20 @@ async def reply_to_message(
     if not is_member:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     
-    # Get user info for sender details
+    # Get or create user info for sender details
     user_info = get_user_by_email(user_email)
-    sender_name = user_info.get("name", user_email.split("@")[0]) if user_info else user_email.split("@")[0]
+    if not user_info:
+        # Auto-create user profile if it doesn't exist
+        user_info = {
+            "userId": user_id,
+            "name": current_user.get("name", user_email.split("@")[0]),
+            "email": user_email,
+            "myTeams": [],
+            "created_at": datetime.utcnow()
+        }
+        create_document("users", user_id, user_info)
+    
+    sender_name = user_info.get("name", user_email.split("@")[0])
     
     reply_id = str(uuid.uuid4())
     reply = Message(

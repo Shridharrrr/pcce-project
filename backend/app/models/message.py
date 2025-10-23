@@ -17,11 +17,10 @@ class MessageStatus(str, Enum):
 class MessageBase(BaseModel):
     content: str
     message_type: MessageType = MessageType.TEXT
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = {}
 
 class MessageCreate(MessageBase):
     team_id: str
-    sender_email: EmailStr
 
 class MessageUpdate(BaseModel):
     content: Optional[str] = None

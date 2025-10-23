@@ -22,13 +22,18 @@ async def create_team(
     admin_email = current_user.get("email")
     admin_id = current_user.get("uid")
     
-    # Get admin user info
+    # Get or create admin user info
     admin_user = get_user_by_email(admin_email)
     if not admin_user:
-        raise HTTPException(
-            status_code=404, 
-            detail="Admin user not found. Please complete your profile first."
-        )
+        # Auto-create user profile if it doesn't exist
+        admin_user = {
+            "userId": admin_id,
+            "name": current_user.get("name", admin_email.split("@")[0]),
+            "email": admin_email,
+            "myTeams": [],
+            "created_at": datetime.utcnow()
+        }
+        create_document("users", admin_id, admin_user)
     
     # Create team members list starting with admin
     members = [TeamMember(

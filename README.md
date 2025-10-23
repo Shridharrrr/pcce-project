@@ -1,224 +1,300 @@
-# PCCE Project - Workspace Management Application
+# WorkSpace Hub - Team Collaboration Platform
 
-A modern workspace management application with real-time chat functionality for different projects. Built with Next.js, FastAPI, and Firebase.
+A modern workspace management system that enables teams to collaborate efficiently through real-time chat, project management, and seamless team coordination. All conversations are automatically saved to Firebase Firestore.
 
 ## Features
 
-- 🔐 **Authentication**: Email/password and Google sign-in
-- 📁 **Project Management**: Create and manage different projects
-- 💬 **Real-time Chat**: Each project has its own chat space
-- 👥 **Team Collaboration**: Add team members to projects
-- 🔄 **Real-time Updates**: WebSocket support for instant messaging
+### 🏠 Landing Page
+- Clean, modern landing page introducing the workspace management system
+- Automatic redirect to dashboard for authenticated users
+- Call-to-action buttons for getting started
+
+### 🔐 Authentication
+- Email/Password authentication via Firebase
+- Google Sign-In integration
+- Secure token-based authentication
+- Protected routes for authenticated users only
+
+### 📊 Dashboard
+- **Project Management**: Create and manage multiple projects
+- **Team Collaboration**: Add members to projects via email
+- **Real-time Chat**: Each project has its own dedicated chat room
+- **Project Sidebar**: Quick access to all your projects
+- **User Profile**: Display user information and avatar
+
+### 💬 Chat Features
+- Real-time messaging within each project
+- Message history automatically saved to Firestore
+- Sender identification with avatars
+- Timestamp for each message
+- Responsive chat interface
+
+### 👥 Team Management
+- Create projects with name and description
+- Add multiple team members via email addresses
+- View all project members
+- Admin controls for project management
 
 ## Tech Stack
 
-### Frontend
-- **Next.js 16** - React framework
-- **Tailwind CSS** - Styling
-- **Firebase Auth** - Authentication
-- **React Context** - State management
-
 ### Backend
-- **FastAPI** - Python web framework
-- **Firebase Admin SDK** - Backend authentication
-- **Firestore** - Database
-- **WebSockets** - Real-time communication
+- **FastAPI**: Modern Python web framework
+- **Firebase Admin SDK**: Authentication and Firestore integration
+- **Pydantic**: Data validation
+- **Uvicorn**: ASGI server
 
-## Quick Start
+### Frontend
+- **Next.js 16**: React framework with App Router
+- **React 19**: Latest React features
+- **Firebase SDK**: Client-side authentication
+- **Tailwind CSS 4**: Utility-first styling
+- **Geist Font**: Modern typography
 
-### Prerequisites
-- Node.js (v18 or higher)
-- Python (v3.8 or higher)
-- Firebase project
-
-### 1. Clone the repository
-```bash
-git clone <repository-url>
-cd pcce-project
-```
-
-### 2. Backend Setup
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Add your Firebase service account key
-# Download from Firebase Console > Project Settings > Service Accounts
-# Place as: backend/firebase-service-account.json
-
-# Start the backend server
-python main.py
-```
-
-### 3. Frontend Setup
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Create environment file
-cp .env.example .env.local
-
-# Edit .env.local with your Firebase configuration
-# Get from Firebase Console > Project Settings > General > Your apps
-
-# Start the development server
-npm run dev
-```
-
-### 4. Firebase Configuration
-
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project
-3. Enable Authentication:
-   - Go to Authentication > Sign-in method
-   - Enable Email/Password and Google providers
-4. Create Firestore Database:
-   - Go to Firestore Database
-   - Create database in production mode
-5. Get your configuration:
-   - Go to Project Settings > General > Your apps
-   - Copy the configuration to `.env.local`
-
-### 5. Access the Application
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-## Usage
-
-1. **Sign Up/Sign In**: Create an account or sign in with Google
-2. **Create Projects**: Click "New Project" to create a workspace
-3. **Add Team Members**: Invite others by email when creating projects
-4. **Start Chatting**: Select a project to access its chat space
-5. **Real-time Messaging**: Send messages and see them instantly
+### Database
+- **Firebase Firestore**: NoSQL cloud database for real-time data sync
 
 ## Project Structure
 
 ```
 pcce-project/
-├── frontend/                 # Next.js frontend
-│   ├── src/
-│   │   ├── app/             # App router pages
-│   │   ├── components/      # React components
-│   │   ├── contexts/        # React contexts
-│   │   └── config/          # Configuration files
-│   └── package.json
-├── backend/                 # FastAPI backend
+├── backend/
 │   ├── app/
-│   │   ├── models/          # Pydantic models
-│   │   ├── routes/          # API routes
-│   │   ├── services/        # Business logic
-│   │   └── dependencies/     # FastAPI dependencies
-│   └── main.py
+│   │   ├── dependencies/
+│   │   │   └── auth.py          # Authentication middleware
+│   │   ├── models/
+│   │   │   ├── message.py       # Message data models
+│   │   │   ├── teams.py         # Team data models
+│   │   │   └── users.py         # User data models
+│   │   ├── routes/
+│   │   │   ├── auth.py          # Auth endpoints
+│   │   │   ├── message_routes.py # Message CRUD
+│   │   │   ├── team_routes.py   # Team management
+│   │   │   └── user_routes.py   # User management
+│   │   └── services/
+│   │       ├── firestore_service.py  # Firestore operations
+│   │       └── websocket_service.py  # WebSocket support
+│   ├── config.py                # Firebase configuration
+│   ├── main.py                  # FastAPI application
+│   ├── requirements.txt         # Python dependencies
+│   └── firebase-service-account.json  # Firebase credentials
+│
+├── frontend/
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── auth/
+│   │   │   │   └── page.js      # Authentication page
+│   │   │   ├── dashboard/
+│   │   │   │   └── page.js      # Main dashboard
+│   │   │   ├── layout.js        # Root layout
+│   │   │   ├── page.js          # Landing page
+│   │   │   └── globals.css      # Global styles
+│   │   ├── components/
+│   │   │   ├── AddProjectModal.jsx   # Create project modal
+│   │   │   ├── ChatInterface.jsx     # Chat UI
+│   │   │   ├── ProjectSidebar.jsx    # Project list
+│   │   │   └── ProtectedRoute.jsx    # Auth guard
+│   │   ├── config/
+│   │   │   └── firebase.js      # Firebase client config
+│   │   └── contexts/
+│   │       └── AuthContext.js   # Auth state management
+│   ├── package.json
+│   └── .env                     # Environment variables
+│
 └── README.md
 ```
+
+## Setup Instructions
+
+### Prerequisites
+- Node.js 18+ and npm
+- Python 3.8+
+- Firebase project with Firestore enabled
+
+### Backend Setup
+
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Create virtual environment:**
+   ```bash
+   python -m venv venv
+   ```
+
+3. **Activate virtual environment:**
+   - Windows: `venv\Scripts\activate`
+   - Mac/Linux: `source venv/bin/activate`
+
+4. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. **Configure Firebase:**
+   - Download your Firebase service account JSON from Firebase Console
+   - Save it as `firebase-service-account.json` in the backend directory
+
+6. **Run the backend:**
+   ```bash
+   python main.py
+   ```
+   Backend will run on `http://127.0.0.1:8000`
+
+### Frontend Setup
+
+1. **Navigate to frontend directory:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   Create a `.env` file with your Firebase configuration:
+   ```env
+   NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+   NEXT_PUBLIC_API_URL=http://localhost:8000
+   ```
+
+4. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+   Frontend will run on `http://localhost:3000`
 
 ## API Endpoints
 
 ### Authentication
-- `POST /auth/verify` - Verify Firebase token
+- `POST /auth/verify-token` - Verify Firebase ID token
+- `GET /auth/me` - Get current user info
 
 ### Teams/Projects
-- `GET /teams/` - Get user's teams
-- `POST /teams/` - Create new team
-- `GET /teams/{team_id}` - Get specific team
-- `PUT /teams/{team_id}` - Update team
-- `DELETE /teams/{team_id}` - Delete team
+- `POST /teams/` - Create new project
+- `GET /teams/` - Get user's projects
+- `GET /teams/{team_id}` - Get specific project
+- `PUT /teams/{team_id}` - Update project
+- `DELETE /teams/{team_id}` - Delete project
+- `POST /teams/{team_id}/members` - Add member
+- `DELETE /teams/{team_id}/members/{member_id}` - Remove member
 
 ### Messages
-- `GET /messages/{team_id}` - Get team messages
 - `POST /messages/` - Send message
+- `GET /messages/{team_id}` - Get project messages
 - `PUT /messages/{message_id}` - Update message
 - `DELETE /messages/{message_id}` - Delete message
 
-### WebSocket
-- `WS /ws/{team_id}?token={token}` - Real-time chat
+### Users
+- `GET /users/me` - Get current user profile
+- `PUT /users/me` - Update user profile
+- `GET /me/teams` - Get user's teams
+
+## Usage Flow
+
+1. **Landing Page** → User visits the homepage
+2. **Authentication** → User signs up or logs in
+3. **Dashboard** → Redirected to dashboard after authentication
+4. **Create Project** → Click "New Project" to create a workspace
+5. **Add Members** → Enter email addresses of team members
+6. **Start Chatting** → Select project and start collaborating
+7. **Real-time Sync** → All messages automatically saved to Firestore
+
+## Features in Detail
+
+### Project Creation
+- **Name**: Required field for project identification
+- **Description**: Optional field to describe the project
+- **Members**: Add team members by entering comma-separated email addresses
+- Each project automatically creates a dedicated chat room
+
+### Chat System
+- Messages are linked to specific projects (teamId)
+- Each message includes:
+  - Sender information (name, email, avatar)
+  - Message content
+  - Timestamp
+  - Message type (text, file, etc.)
+- Messages are stored in Firestore `messages` collection
+- Real-time updates via Firebase listeners
+
+### Data Storage in Firestore
+
+**Collections:**
+- `users` - User profiles and team memberships
+- `teams` - Project information and members
+- `messages` - Chat messages linked to teams
+- `team_invites` - Pending team invitations
+
+**Message Document Structure:**
+```json
+{
+  "messageId": "unique-id",
+  "teamId": "project-id",
+  "senderId": "user-id",
+  "sender_email": "user@example.com",
+  "sender_name": "User Name",
+  "content": "Message text",
+  "message_type": "text",
+  "created_at": "2024-01-01T00:00:00Z",
+  "status": "sent"
+}
+```
+
+## Security
+
+- Firebase Authentication for secure user management
+- JWT token validation on all protected endpoints
+- Role-based access control (admin/member)
+- CORS configured for frontend-backend communication
+- Protected routes on frontend using AuthContext
 
 ## Development
 
-### Running in Development Mode
-
-Use the provided scripts:
-
-**Windows:**
+### Running Tests
 ```bash
-start-dev.bat
-```
-
-**macOS/Linux:**
-```bash
-chmod +x start-dev.sh
-./start-dev.sh
-```
-
-### Manual Start
-
-**Backend:**
-```bash
+# Backend
 cd backend
-python main.py
+pytest
+
+# Frontend
+cd frontend
+npm test
 ```
 
-**Frontend:**
+### Building for Production
 ```bash
+# Frontend
 cd frontend
-npm run dev
+npm run build
+npm start
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Backend Issues
+- **Firebase not configured**: Ensure `firebase-service-account.json` is in the backend directory
+- **Port already in use**: Change port in `main.py` or kill the process using port 8000
 
-1. **Firebase Configuration Error**
-   - Ensure `firebase-service-account.json` is in the backend directory
-   - Check that all environment variables are set correctly
-
-2. **CORS Errors**
-   - Backend is configured to allow all origins in development
-   - Check that the frontend is calling the correct API URL
-
-3. **Authentication Issues**
-   - Verify Firebase project is properly configured
-   - Check that authentication providers are enabled
-
-4. **Database Connection**
-   - Ensure Firestore is enabled in your Firebase project
-   - Check that the service account has proper permissions
-
-### Debug Mode
-
-Enable debug logging by setting environment variables:
-```bash
-# Backend
-export DEBUG=1
-python main.py
-
-# Frontend
-export NODE_ENV=development
-npm run dev
-```
+### Frontend Issues
+- **Firebase config error**: Check `.env` file has all required variables
+- **API connection failed**: Ensure backend is running on correct port
+- **Build errors**: Delete `.next` folder and `node_modules`, then reinstall
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
@@ -226,4 +302,4 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For support, please open an issue in the repository or contact the development team.
+For issues and questions, please create an issue in the repository.

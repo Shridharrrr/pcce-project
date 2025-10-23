@@ -90,10 +90,10 @@ export default function AuthPage() {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-200">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {isLogin ? "Sign In to Planora" : "Signup to Planora Now"}
+            {isLogin ? "Sign In to WorkSpace Hub" : "Join WorkSpace Hub"}
           </h1>
           <p className="text-gray-600">
-            {isLogin ? "Welcome back!" : "Plan your child's future education"}
+            {isLogin ? "Welcome back!" : "Start collaborating with your team"}
           </p>
         </div>
 
