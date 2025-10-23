@@ -1,10 +1,39 @@
-from pydantic import BaseModel
-from typing import List
+from pydantic import BaseModel, EmailStr
+from typing import List, Optional
 from datetime import datetime
 
-class Teams(BaseModel):
+class TeamBase(BaseModel):
+    teamName: str
+    description: Optional[str] = None
+
+class TeamCreate(TeamBase):
+    admin_email: EmailStr
+    member_emails: List[EmailStr] = []
+
+class TeamUpdate(BaseModel):
+    teamName: Optional[str] = None
+    description: Optional[str] = None
+
+class TeamMember(BaseModel):
+    user_id: str
+    email: str
+    name: str
+    role: str = "member"  # member, admin
+    joined_at: datetime
+
+class Team(TeamBase):
     teamId: str
-    Admin: str
-    TeamName: str
-    members: List[str]
-    createdAt: datetime
+    admin_id: str
+    admin_email: str
+    members: List[TeamMember] = []
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+class TeamInvite(BaseModel):
+    team_id: str
+    inviter_email: str
+    invitee_email: EmailStr
+    role: str = "member"
+    status: str = "pending"  # pending, accepted, declined
+    created_at: datetime
+    expires_at: datetime

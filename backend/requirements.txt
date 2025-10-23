@@ -1,4 +1,10 @@
 fastapi
-pydantic
+pydantic[email]
 uvicorn
 firebase_admin
+websockets
+email-validator
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+python-dotenv
