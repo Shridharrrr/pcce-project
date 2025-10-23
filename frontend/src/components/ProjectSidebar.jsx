@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, refreshTrigger }) => {
+const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, refreshTrigger, onThinkBuddyClick }) => {
   const { getIdToken, user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,21 +128,32 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 h-full flex flex-col">
+    <div className="w-80 bg-gradient-to-b from-gray-50 to-white border-r border-gray-200 h-full flex flex-col shadow-sm">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Projects</h2>
+          <h2 className="text-xl font-bold text-gray-900">Projects</h2>
           <button
             onClick={onCreateProject}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            New Project
+            New
           </button>
         </div>
+        
+        {/* ThinkBuddy Button */}
+        <button
+          onClick={onThinkBuddyClick}
+          className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          ThinkBuddy Assistant
+        </button>
         
         {/* Offline Mode Indicator */}
         {offlineMode && (
@@ -194,50 +205,45 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
               <div
                 key={project.teamId}
                 onClick={() => handleProjectClick(project)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors mb-2 ${
+                className={`p-2.5 rounded-xl cursor-pointer transition-all mb-2 ${
                   selectedProject?.teamId === project.teamId
-                    ? 'bg-blue-50 border border-blue-200'
-                    : 'hover:bg-gray-50 border border-transparent'
+                    ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-300 shadow-sm'
+                    : 'hover:bg-white hover:shadow-sm border border-gray-100'
                 }`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
+                    <h3 className="font-semibold text-gray-900 truncate text-sm">
                       {project.teamName}
                     </h3>
-                    {project.description && (
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                        {project.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-1.5">
                       <div className="flex -space-x-1">
-                        {project.members?.slice(0, 3).map((member, index) => (
+                        {project.members?.slice(0, 2).map((member, index) => (
                           <div
                             key={index}
-                            className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white"
+                            className="w-5 h-5 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm"
                           >
                             <span className="text-white text-xs font-medium">
                               {member.name?.charAt(0).toUpperCase() || member.email?.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         ))}
-                        {project.members?.length > 3 && (
-                          <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white">
+                        {project.members?.length > 2 && (
+                          <div className="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
                             <span className="text-gray-600 text-xs font-medium">
-                              +{project.members.length - 3}
+                              +{project.members.length - 2}
                             </span>
                           </div>
                         )}
                       </div>
                       <span className="text-xs text-gray-400">
-                        {formatDate(project.created_at)}
+                        {project.members?.length} member{project.members?.length !== 1 ? 's' : ''}
                       </span>
                     </div>
                   </div>
                   {project.last_message_at && (
                     <div className="ml-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                     </div>
                   )}
                 </div>
@@ -248,8 +254,8 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500 text-center">
+      <div className="p-4 border-t border-gray-200 bg-white">
+        <div className="text-xs text-gray-500 text-center font-medium">
           {projects.length} project{projects.length !== 1 ? 's' : ''}
         </div>
       </div>
