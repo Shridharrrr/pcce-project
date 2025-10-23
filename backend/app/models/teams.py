@@ -7,7 +7,6 @@ class TeamBase(BaseModel):
     description: Optional[str] = None
 
 class TeamCreate(TeamBase):
-    admin_email: EmailStr
     member_emails: List[EmailStr] = []
 
 class TeamUpdate(BaseModel):
