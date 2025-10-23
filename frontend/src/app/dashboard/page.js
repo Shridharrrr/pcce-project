@@ -7,6 +7,7 @@ import Link from "next/link";
 import ProjectSidebar from "../../components/ProjectSidebar";
 import ChatInterface from "../../components/ChatInterface";
 import AddProjectModal from "../../components/AddProjectModal";
+import ProtectedRoute from "../../components/ProtectedRoute";
 
 export default function Dashboard() {
   const { user, logout, getIdToken } = useAuth();
@@ -76,13 +77,17 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <ProtectedRoute>
+      <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">Planora</h1>
+              <div className="ml-4 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                Demo Mode
+              </div>
               <nav className="ml-8 flex space-x-4">
                 <Link
                   href="/dashboard"
@@ -105,56 +110,57 @@ export default function Dashboard() {
               </nav>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                {userData?.photoURL ? (
-                  <img
-                    src={userData.photoURL}
-                    alt="Profile"
-                    className="h-8 w-8 rounded-full"
-                  />
-                ) : (
-                  <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">
-                      {userData?.name?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <span className="text-sm font-medium text-gray-700">
-                  {userData?.name}
-                </span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3">
+                  {userData?.photoURL ? (
+                    <img
+                      src={userData.photoURL}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">
+                        {userData?.name?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-sm font-medium text-gray-700">
+                    {userData?.name}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Logout
+                </button>
               </div>
-              <button
-                onClick={handleLogout}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex h-screen">
-        {/* Project Sidebar */}
-        <ProjectSidebar
-          selectedProject={selectedProject}
-          onProjectSelect={handleProjectSelect}
-          onCreateProject={handleCreateProject}
-          refreshTrigger={refreshTrigger}
+        {/* Main Content */}
+        <main className="flex-1 flex h-screen">
+          {/* Project Sidebar */}
+          <ProjectSidebar
+            selectedProject={selectedProject}
+            onProjectSelect={handleProjectSelect}
+            onCreateProject={handleCreateProject}
+            refreshTrigger={refreshTrigger}
+          />
+          
+          {/* Chat Interface */}
+          <ChatInterface selectedProject={selectedProject} />
+        </main>
+
+        {/* Add Project Modal */}
+        <AddProjectModal
+          isOpen={showAddProjectModal}
+          onClose={() => setShowAddProjectModal(false)}
+          onProjectCreated={handleProjectCreated}
         />
-        
-        {/* Chat Interface */}
-        <ChatInterface selectedProject={selectedProject} />
-      </main>
-
-      {/* Add Project Modal */}
-      <AddProjectModal
-        isOpen={showAddProjectModal}
-        onClose={() => setShowAddProjectModal(false)}
-        onProjectCreated={handleProjectCreated}
-      />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

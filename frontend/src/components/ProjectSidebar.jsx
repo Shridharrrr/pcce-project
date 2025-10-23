@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, refreshTrigger }) => {
-  const { getIdToken } = useAuth();
+  const { getIdToken, user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [offlineMode, setOfflineMode] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -17,6 +18,8 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
     try {
       setLoading(true);
       setError(null);
+      setOfflineMode(false);
+      
       const token = await getIdToken();
       
       if (!token) {
@@ -33,17 +36,75 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to fetch projects: ${response.status}`);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please login again.');
+        } else if (response.status === 500) {
+          throw new Error('Server error. Please try again later.');
+        } else if (response.status === 404) {
+          // No teams found, return empty array
+          setProjects([]);
+          return;
+        } else {
+          throw new Error(`Failed to fetch projects: ${response.status}`);
+        }
       }
 
       const data = await response.json();
-      setProjects(data);
+      setProjects(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError(err.message || 'Failed to load projects');
+      
+      // Enable offline mode with mock data
+      setOfflineMode(true);
+      setProjects(getMockProjects());
     } finally {
       setLoading(false);
     }
+  };
+
+  // Mock data for offline mode
+  const getMockProjects = () => {
+    return [
+      {
+        teamId: 'mock-1',
+        teamName: 'Sample Project',
+        description: 'This is a sample project for demonstration',
+        members: [
+          {
+            user_id: user?.uid || 'mock-user',
+            email: user?.email || 'user@example.com',
+            name: user?.displayName || 'User',
+            role: 'admin'
+          }
+        ],
+        created_at: new Date().toISOString(),
+        last_message_at: new Date().toISOString()
+      },
+      {
+        teamId: 'mock-2',
+        teamName: 'Development Team',
+        description: 'Working on the new features',
+        members: [
+          {
+            user_id: user?.uid || 'mock-user',
+            email: user?.email || 'user@example.com',
+            name: user?.displayName || 'User',
+            role: 'admin'
+          },
+          {
+            user_id: 'mock-dev-1',
+            email: 'dev1@example.com',
+            name: 'Developer 1',
+            role: 'member'
+          }
+        ],
+        created_at: new Date(Date.now() - 86400000).toISOString(),
+        last_message_at: new Date(Date.now() - 3600000).toISOString()
+      }
+    ];
   };
 
   const handleProjectClick = (project) => {
@@ -58,7 +119,10 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
   if (loading) {
     return (
       <div className="w-80 bg-white border-r border-gray-200 h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">Loading projects...</p>
+        </div>
       </div>
     );
   }
@@ -80,7 +144,26 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
           </button>
         </div>
         
-        {error && (
+        {/* Offline Mode Indicator */}
+        {offlineMode && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p className="text-yellow-700 text-sm">Demo mode - Backend not connected</p>
+            </div>
+            <button
+              onClick={fetchProjects}
+              className="text-yellow-600 hover:text-yellow-700 text-xs font-medium mt-2"
+            >
+              Try connecting again
+            </button>
+          </div>
+        )}
+        
+        {/* Error Message */}
+        {error && !offlineMode && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
             <p className="text-red-600 text-sm">{error}</p>
             <button
