@@ -9,6 +9,7 @@ import ChatInterface from "../../components/ChatInterface";
 import AddProjectModal from "../../components/AddProjectModal";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import ThinkBuddyAssistant from "../../components/ThinkBuddyAssistant";
+import TodoList from "../../components/TodoList";
 
 export default function Dashboard() {
   const { user, logout, getIdToken } = useAuth();
@@ -20,6 +21,7 @@ export default function Dashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showThinkBuddy, setShowThinkBuddy] = useState(false);
   const [projects, setProjects] = useState([]);
+  const [activeTab, setActiveTab] = useState("chat"); // "chat" or "todos"
 
   useEffect(() => {
     if (!user) {
@@ -163,7 +165,42 @@ export default function Dashboard() {
           {showThinkBuddy ? (
             <ThinkBuddyAssistant projects={projects} />
           ) : (
-            <ChatInterface selectedProject={selectedProject} />
+            <div className="flex-1 flex flex-col">
+              {/* Tab Navigation */}
+              {selectedProject && (
+                <div className="bg-white border-b border-gray-200 px-4">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setActiveTab("chat")}
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                        activeTab === "chat"
+                          ? "text-blue-600 border-blue-600"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
+                      }`}
+                    >
+                      Chat
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("todos")}
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                        activeTab === "todos"
+                          ? "text-blue-600 border-blue-600"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
+                      }`}
+                    >
+                      Todos
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Content based on active tab */}
+              {activeTab === "chat" ? (
+                <ChatInterface selectedProject={selectedProject} />
+              ) : (
+                <TodoList selectedProject={selectedProject} />
+              )}
+            </div>
           )}
         </main>
 

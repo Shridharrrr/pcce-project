@@ -138,3 +138,58 @@ def remove_team_member(team_id: str, user_id: str):
         team_ref.update({"members": members, "updated_at": datetime.utcnow()})
         return True
     return False
+
+# Todo-related functions
+def create_todo(todo_id: str, todo_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a new todo in Firestore"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    db.collection("todos").document(todo_id).set(todo_data)
+    return todo_data
+
+def get_todo(todo_id: str) -> Optional[Dict[str, Any]]:
+    """Get a single todo by ID"""
+    return get_document("todos", todo_id)
+
+def get_team_todos(team_id: str) -> List[Dict[str, Any]]:
+    """Get all todos for a specific team"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    try:
+        todos_ref = db.collection("todos").where("team_id", "==", team_id)
+        todos_ref = todos_ref.order_by("created_at", direction="DESCENDING")
+        docs = todos_ref.stream()
+        return [doc.to_dict() for doc in docs]
+    except Exception as e:
+        print(f"Error fetching todos: {e}")
+        # Fallback without ordering if index doesn't exist
+        try:
+            todos_ref = db.collection("todos").where("team_id", "==", team_id)
+            docs = todos_ref.stream()
+            return [doc.to_dict() for doc in docs]
+        except Exception as e2:
+            print(f"Error fetching todos without order: {e2}")
+            return []
+
+def get_user_todos(user_email: str) -> List[Dict[str, Any]]:
+    """Get all todos assigned to a specific user"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    try:
+        todos_ref = db.collection("todos")
+        docs = todos_ref.stream()
+        user_todos = []
+        for doc in docs:
+            todo_data = doc.to_dict()
+            # Check if user is assigned to this todo
+            assigned_users = todo_data.get("assigned_users", [])
+            if any(user.get("email") == user_email for user in assigned_users):
+                user_todos.append(todo_data)
+        return user_todos
+    except Exception as e:
+        print(f"Error fetching user todos: {e}")
+        return []
+
+def delete_todo(todo_id: str) -> bool:
+    """Delete a todo from Firestore"""
+    return delete_document("todos", todo_id)
