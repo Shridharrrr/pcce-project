@@ -10,6 +10,7 @@ import AddProjectModal from "../../components/AddProjectModal";
 import ProtectedRoute from "../../components/ProtectedRoute";
 import ThinkBuddyAssistant from "../../components/ThinkBuddyAssistant";
 import TodoList from "../../components/TodoList";
+import ChatSummary from "../../components/ChatSummary";
 
 export default function Dashboard() {
   const { user, logout, getIdToken } = useAuth();
@@ -190,6 +191,16 @@ export default function Dashboard() {
                     >
                       Todos
                     </button>
+                    <button
+                      onClick={() => setActiveTab("summary")}
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                        activeTab === "summary"
+                          ? "text-blue-600 border-blue-600"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
+                      }`}
+                    >
+                      Summary
+                    </button>
                   </div>
                 </div>
               )}
@@ -197,8 +208,10 @@ export default function Dashboard() {
               {/* Content based on active tab */}
               {activeTab === "chat" ? (
                 <ChatInterface selectedProject={selectedProject} />
-              ) : (
+              ) : activeTab === "todos" ? (
                 <TodoList selectedProject={selectedProject} />
+              ) : (
+                <ChatSummary selectedProject={selectedProject} />
               )}
             </div>
           )}
