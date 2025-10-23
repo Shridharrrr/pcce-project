@@ -32,9 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-firebase-service-account.json
+# .gitignore
+backend/firebase-service-account.json
 
-/__pycache__
+
+backend/app/__pycache__
 # vercel
 .vercel
 
