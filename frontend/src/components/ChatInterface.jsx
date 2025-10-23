@@ -15,7 +15,15 @@ const ChatInterface = ({ selectedProject }) => {
 
   useEffect(() => {
     if (selectedProject) {
-      fetchMessages();
+      fetchMessages(true); // Initial load with spinner
+      
+      // Set up auto-refresh every 3 seconds (without spinner)
+      const intervalId = setInterval(() => {
+        fetchMessages(false);
+      }, 3000);
+      
+      // Cleanup interval on unmount or when project changes
+      return () => clearInterval(intervalId);
     } else {
       setMessages([]);
     }
@@ -37,11 +45,14 @@ const ChatInterface = ({ selectedProject }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (showLoader = true) => {
     if (!selectedProject) return;
 
     try {
-      setLoading(true);
+      // Only show loading spinner on initial load
+      if (showLoader) {
+        setLoading(true);
+      }
       setError(null);
       
       const token = await getIdToken();
@@ -82,17 +93,22 @@ const ChatInterface = ({ selectedProject }) => {
       setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching messages:', err);
-      setError(err.message || 'Failed to load messages');
+      // Only show error on initial load, not on auto-refresh
+      if (showLoader) {
+        setError(err.message || 'Failed to load messages');
+      }
       
       // For demo mode, show mock messages
       if (selectedProject.teamId.startsWith('mock-')) {
         setMessages(getMockMessages(selectedProject.teamId));
         setError(null);
-      } else {
+      } else if (showLoader) {
         setMessages([]);
       }
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -218,6 +234,9 @@ const ChatInterface = ({ selectedProject }) => {
 
       const sentMessage = await response.json();
       setMessages(prev => [...prev, sentMessage]);
+      
+      // Refresh messages immediately after sending to get any updates
+      setTimeout(() => fetchMessages(false), 500);
     } catch (err) {
       console.error('Error sending message:', err);
       setError(err.message || 'Failed to send message');
