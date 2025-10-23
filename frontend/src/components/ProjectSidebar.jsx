@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, refreshTrigger, onThinkBuddyClick }) => {
+const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, refreshTrigger, onThinkBuddyClick, onProjectsLoaded }) => {
   const { getIdToken, user } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,14 +52,22 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
       }
 
       const data = await response.json();
-      setProjects(Array.isArray(data) ? data : []);
+      const projectsData = Array.isArray(data) ? data : [];
+      setProjects(projectsData);
+      if (onProjectsLoaded) {
+        onProjectsLoaded(projectsData);
+      }
     } catch (err) {
       console.error('Error fetching projects:', err);
       setError(err.message || 'Failed to load projects');
       
       // Enable offline mode with mock data
       setOfflineMode(true);
-      setProjects(getMockProjects());
+      const mockProjects = getMockProjects();
+      setProjects(mockProjects);
+      if (onProjectsLoaded) {
+        onProjectsLoaded(mockProjects);
+      }
     } finally {
       setLoading(false);
     }

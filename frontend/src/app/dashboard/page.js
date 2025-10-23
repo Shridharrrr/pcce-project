@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showThinkBuddy, setShowThinkBuddy] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
     if (!user) {
@@ -155,11 +156,12 @@ export default function Dashboard() {
             onCreateProject={handleCreateProject}
             refreshTrigger={refreshTrigger}
             onThinkBuddyClick={handleThinkBuddyClick}
+            onProjectsLoaded={setProjects}
           />
           
           {/* Main Content Area */}
           {showThinkBuddy ? (
-            <ThinkBuddyAssistant />
+            <ThinkBuddyAssistant projects={projects} />
           ) : (
             <ChatInterface selectedProject={selectedProject} />
           )}

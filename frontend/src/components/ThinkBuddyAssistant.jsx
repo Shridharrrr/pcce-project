@@ -3,20 +3,39 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
-const ThinkBuddyAssistant = () => {
+const PREDEFINED_PROMPTS = [
+  "Explain this code snippet",
+  "Help me debug an issue",
+  "Suggest best practices",
+  "Generate project ideas",
+  "Review my code",
+];
+
+const ThinkBuddyAssistant = ({ projects = [] }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
       role: "assistant",
-      content: "Hello! I'm ThinkBuddy, your AI assistant. I'm here to help you with your projects, answer questions, brainstorm ideas, or provide guidance. How can I assist you today?",
+      content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
       timestamp: new Date().toISOString()
     }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedProject, setSelectedProject] = useState("general");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  const availableProjects = projects.length > 0 ? [
+    { teamId: "general", teamName: "General", description: "General questions and assistance" },
+    ...projects
+  ] : [
+    { teamId: "general", teamName: "General", description: "General questions and assistance" },
+    { teamId: "webdev", teamName: "Web Development", description: "Frontend, backend, and full-stack" },
+    { teamId: "ai", teamName: "AI & Machine Learning", description: "AI models, training, and deployment" },
+    { teamId: "mobile", teamName: "Mobile Development", description: "iOS, Android, and cross-platform" },
+  ];
 
   useEffect(() => {
     scrollToBottom();
@@ -33,13 +52,14 @@ const ThinkBuddyAssistant = () => {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isTyping) return;
+  const handleSendMessage = async (customMessage) => {
+    const messageToSend = customMessage || inputMessage.trim();
+    if (!messageToSend || isTyping) return;
 
     const userMessage = {
       id: messages.length + 1,
       role: "user",
-      content: inputMessage.trim(),
+      content: messageToSend,
       timestamp: new Date().toISOString()
     };
 
@@ -49,7 +69,7 @@ const ThinkBuddyAssistant = () => {
 
     // Simulate AI response (replace with actual API call)
     setTimeout(() => {
-      const aiResponse = generateAIResponse(userMessage.content);
+      const aiResponse = generateAIResponse(messageToSend);
       const assistantMessage = {
         id: messages.length + 2,
         role: "assistant",
@@ -61,21 +81,16 @@ const ThinkBuddyAssistant = () => {
     }, 1500);
   };
 
+  const handlePredefinedPrompt = (prompt) => {
+    handleSendMessage(prompt);
+  };
+
   // Mock AI response generator (replace with actual API integration)
   const generateAIResponse = (userInput) => {
-    const responses = {
-      hello: "Hello! How can I help you today?",
-      help: "I can assist you with:\n• Project planning and management\n• Code suggestions and debugging\n• Brainstorming ideas\n• Answering questions\n• Task organization\n\nWhat would you like help with?",
-      project: "I'd be happy to help with your project! Could you tell me more about what you're working on?",
-      default: "That's an interesting question! I'm here to help you think through it. Could you provide more details so I can give you a better answer?"
-    };
-
-    const lowerInput = userInput.toLowerCase();
-    if (lowerInput.includes("hello") || lowerInput.includes("hi")) return responses.hello;
-    if (lowerInput.includes("help")) return responses.help;
-    if (lowerInput.includes("project")) return responses.project;
+    const projectContext = availableProjects.find(p => p.teamId === selectedProject);
+    const contextName = projectContext?.teamName || "General";
     
-    return responses.default;
+    return `Based on your "${contextName}" project context: I understand you're asking about "${userInput}". This is a simulated response. In a real implementation, this would connect to an AI API to provide intelligent responses based on your project context.`;
   };
 
   const formatTime = (timestamp) => {
@@ -83,16 +98,6 @@ const ThinkBuddyAssistant = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleNewChat = () => {
-    setMessages([
-      {
-        id: 1,
-        role: "assistant",
-        content: "Hello! I'm ThinkBuddy, your AI assistant. I'm here to help you with your projects, answer questions, brainstorm ideas, or provide guidance. How can I assist you today?",
-        timestamp: new Date().toISOString()
-      }
-    ]);
-  };
 
   return (
     <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col h-full">
@@ -106,19 +111,26 @@ const ThinkBuddyAssistant = () => {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">ThinkBuddy Assistant</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                ThinkBuddy - {availableProjects.find(p => p.teamId === selectedProject)?.teamName || "General"}
+              </h2>
               <p className="text-xs text-gray-500">Your AI-powered productivity companion</p>
             </div>
           </div>
-          <button
-            onClick={handleNewChat}
-            className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            New Chat
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700">Project:</span>
+            <select
+              value={selectedProject}
+              onChange={(e) => setSelectedProject(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none bg-white text-sm shadow-sm text-gray-900 font-medium hover:border-purple-400 transition-colors"
+            >
+              {availableProjects.map((project) => (
+                <option key={project.teamId} value={project.teamId}>
+                  {project.teamName}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -189,7 +201,25 @@ const ThinkBuddyAssistant = () => {
 
       {/* Input Area */}
       <div className="bg-white border-t border-gray-200 p-4 shadow-lg">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* Predefined Prompts */}
+          <div className="flex flex-wrap gap-2">
+            {PREDEFINED_PROMPTS.map((prompt, index) => (
+              <button
+                key={index}
+                onClick={() => handlePredefinedPrompt(prompt)}
+                disabled={isTyping}
+                className="bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-purple-200"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {prompt}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Field */}
           <div className="flex gap-3">
             <div className="flex-1 relative">
               <textarea
@@ -198,7 +228,7 @@ const ThinkBuddyAssistant = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Ask me anything... (Press Enter to send, Shift+Enter for new line)"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none shadow-sm"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none shadow-sm text-gray-900 placeholder:text-gray-400"
                 rows="1"
                 style={{ minHeight: '48px', maxHeight: '120px' }}
                 disabled={isTyping}
@@ -207,7 +237,7 @@ const ThinkBuddyAssistant = () => {
             <button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isTyping}
-              className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 disabled:cursor-not-allowed"
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 disabled:cursor-not-allowed"
             >
               {isTyping ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

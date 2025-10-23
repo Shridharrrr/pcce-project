@@ -163,7 +163,7 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
               value={formData.teamName}
               onChange={handleInputChange}
               placeholder="Enter project name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder:text-gray-400"
               disabled={loading}
               required
             />
@@ -181,7 +181,7 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
               onChange={handleInputChange}
               placeholder="Enter project description (optional)"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none text-gray-900 placeholder:text-gray-400"
               disabled={loading}
             />
           </div>
@@ -198,7 +198,7 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
               value={formData.memberEmails}
               onChange={handleInputChange}
               placeholder="Enter email addresses separated by commas"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-900 placeholder:text-gray-400"
               disabled={loading}
             />
             <p className="text-xs text-gray-500 mt-1">
