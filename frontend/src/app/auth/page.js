@@ -10,11 +10,11 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const { user, login, signup, loginWithGoogle } = useAuth();
+  const { user, login, signup, loginWithGoogle, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,22 +23,31 @@ export default function AuthPage() {
     }
   }, [user, router]);
 
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setFormLoading(true);
     setError("");
 
     // Password confirmation check for signup
     if (!isLogin && password !== confirmPassword) {
       setError("Passwords do not match");
-      setLoading(false);
+      setFormLoading(false);
       return;
     }
 
     // Password length check
     if (!isLogin && password.length < 6) {
       setError("Password should be at least 6 characters");
-      setLoading(false);
+      setFormLoading(false);
       return;
     }
 
@@ -51,6 +60,8 @@ export default function AuthPage() {
       router.push("/dashboard"); 
     } catch (error) {
       setError(error.message);
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -170,10 +181,10 @@ export default function AuthPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={formLoading}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
           >
-            {loading ? (
+            {formLoading ? (
               <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                 Processing...
@@ -196,7 +207,7 @@ export default function AuthPage() {
 
         <button
           onClick={handleGoogleSignIn}
-          disabled={googleLoading || loading}
+          disabled={googleLoading || formLoading}
           className="w-full flex items-center justify-center space-x-3 border border-gray-300 rounded-lg py-3 px-4 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
         >
           {googleLoading ? (

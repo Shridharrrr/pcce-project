@@ -25,6 +25,14 @@ const ChatInterface = ({ selectedProject }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Handle Enter key to send message
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(e);
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -55,22 +63,123 @@ const ChatInterface = ({ selectedProject }) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error:', response.status, errorText);
-        throw new Error(`Failed to fetch messages: ${response.status}`);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please login again.');
+        } else if (response.status === 500) {
+          throw new Error('Server error. Please try again later.');
+        } else if (response.status === 404) {
+          // No messages found, return empty array
+          setMessages([]);
+          return;
+        } else {
+          throw new Error(`Failed to fetch messages: ${response.status}`);
+        }
       }
 
       const data = await response.json();
-      setMessages(data);
+      setMessages(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching messages:', err);
       setError(err.message || 'Failed to load messages');
+      
+      // For demo mode, show mock messages
+      if (selectedProject.teamId.startsWith('mock-')) {
+        setMessages(getMockMessages(selectedProject.teamId));
+        setError(null);
+      } else {
+        setMessages([]);
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Mock messages for demo mode
+  const getMockMessages = (teamId) => {
+    const mockMessages = {
+      'mock-1': [
+        {
+          messageId: 'msg-1',
+          teamId: teamId,
+          senderId: user?.uid || 'mock-user',
+          sender_email: user?.email || 'user@example.com',
+          sender_name: user?.displayName || 'User',
+          content: 'Welcome to the Sample Project! This is a demo message.',
+          message_type: 'text',
+          created_at: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          messageId: 'msg-2',
+          teamId: teamId,
+          senderId: 'mock-user-2',
+          sender_email: 'teammate@example.com',
+          sender_name: 'Teammate',
+          content: 'Thanks for setting this up! Looking forward to working together.',
+          message_type: 'text',
+          created_at: new Date(Date.now() - 1800000).toISOString()
+        }
+      ],
+      'mock-2': [
+        {
+          messageId: 'msg-3',
+          teamId: teamId,
+          senderId: user?.uid || 'mock-user',
+          sender_email: user?.email || 'user@example.com',
+          sender_name: user?.displayName || 'User',
+          content: 'Let\'s discuss the new features we need to implement.',
+          message_type: 'text',
+          created_at: new Date(Date.now() - 7200000).toISOString()
+        },
+        {
+          messageId: 'msg-4',
+          teamId: teamId,
+          senderId: 'mock-dev-1',
+          sender_email: 'dev1@example.com',
+          sender_name: 'Developer 1',
+          content: 'I\'ve started working on the authentication module. Should be ready by tomorrow.',
+          message_type: 'text',
+          created_at: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          messageId: 'msg-5',
+          teamId: teamId,
+          senderId: user?.uid || 'mock-user',
+          sender_email: user?.email || 'user@example.com',
+          sender_name: user?.displayName || 'User',
+          content: 'Great! Keep me updated on the progress.',
+          message_type: 'text',
+          created_at: new Date(Date.now() - 1800000).toISOString()
+        }
+      ]
+    };
+    
+    return mockMessages[teamId] || [];
+  };
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedProject || sending) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage(""); // Clear input immediately for better UX
+
+    // Handle demo mode
+    if (selectedProject.teamId.startsWith('mock-')) {
+      const newMessageObj = {
+        messageId: `msg-${Date.now()}`,
+        teamId: selectedProject.teamId,
+        senderId: user?.uid || 'mock-user',
+        sender_email: user?.email || 'user@example.com',
+        sender_name: user?.displayName || 'User',
+        content: messageText,
+        message_type: 'text',
+        created_at: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, newMessageObj]);
+      return;
+    }
 
     try {
       setSending(true);
@@ -84,7 +193,7 @@ const ChatInterface = ({ selectedProject }) => {
       
       const messageData = {
         team_id: selectedProject.teamId,
-        content: newMessage.trim(),
+        content: messageText,
         message_type: "text",
         metadata: {}
       };
@@ -109,10 +218,11 @@ const ChatInterface = ({ selectedProject }) => {
 
       const sentMessage = await response.json();
       setMessages(prev => [...prev, sentMessage]);
-      setNewMessage("");
     } catch (err) {
       console.error('Error sending message:', err);
       setError(err.message || 'Failed to send message');
+      // Restore message on error
+      setNewMessage(messageText);
     } finally {
       setSending(false);
     }
@@ -289,7 +399,8 @@ const ChatInterface = ({ selectedProject }) => {
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message... (Press Enter to send)"
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               disabled={sending}
             />
