@@ -4,11 +4,15 @@ from datetime import datetime
 
 def create_document(collection_name: str, doc_id: str, data: dict):
     """Create a new document in Firestore"""
+    if db is None:
+        raise Exception("Firestore not configured")
     db.collection(collection_name).document(doc_id).set(data)
     return data
 
 def get_document(collection_name: str, doc_id: str) -> Optional[Dict[str, Any]]:
     """Get a single document from Firestore"""
+    if db is None:
+        raise Exception("Firestore not configured")
     doc_ref = db.collection(collection_name).document(doc_id)
     doc = doc_ref.get()
     if doc.exists:
@@ -17,22 +21,30 @@ def get_document(collection_name: str, doc_id: str) -> Optional[Dict[str, Any]]:
 
 def get_collection(collection_name: str) -> List[Dict[str, Any]]:
     """Get all documents from a collection"""
+    if db is None:
+        raise Exception("Firestore not configured")
     docs = db.collection(collection_name).stream()
     return [doc.to_dict() for doc in docs]
 
 def update_document(collection_name: str, doc_id: str, data: dict):
     """Update a document in Firestore"""
+    if db is None:
+        raise Exception("Firestore not configured")
     data["updated_at"] = datetime.utcnow()
     db.collection(collection_name).document(doc_id).update(data)
     return data
 
 def delete_document(collection_name: str, doc_id: str):
     """Delete a document from Firestore"""
+    if db is None:
+        raise Exception("Firestore not configured")
     db.collection(collection_name).document(doc_id).delete()
     return True
 
 def query_collection(collection_name: str, field: str, operator: str, value: Any) -> List[Dict[str, Any]]:
     """Query a collection with a specific condition"""
+    if db is None:
+        raise Exception("Firestore not configured")
     docs = db.collection(collection_name).where(field, operator, value).stream()
     return [doc.to_dict() for doc in docs]
 
@@ -43,6 +55,8 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
 
 def get_team_messages(team_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Get messages for a specific team, ordered by creation time"""
+    if db is None:
+        raise Exception("Firestore not configured")
     messages_ref = db.collection("messages").where("teamId", "==", team_id)
     messages_ref = messages_ref.order_by("created_at", direction="DESCENDING").limit(limit)
     docs = messages_ref.stream()
@@ -50,6 +64,8 @@ def get_team_messages(team_id: str, limit: int = 50) -> List[Dict[str, Any]]:
 
 def get_user_teams(user_id: str) -> List[Dict[str, Any]]:
     """Get all teams a user is a member of"""
+    if db is None:
+        raise Exception("Firestore not configured")
     teams_ref = db.collection("teams")
     docs = teams_ref.stream()
     user_teams = []
@@ -63,6 +79,8 @@ def get_user_teams(user_id: str) -> List[Dict[str, Any]]:
 
 def add_team_member(team_id: str, member_data: Dict[str, Any]):
     """Add a member to a team"""
+    if db is None:
+        raise Exception("Firestore not configured")
     team_ref = db.collection("teams").document(team_id)
     team_doc = team_ref.get()
     
@@ -79,6 +97,8 @@ def add_team_member(team_id: str, member_data: Dict[str, Any]):
 
 def remove_team_member(team_id: str, user_id: str):
     """Remove a member from a team"""
+    if db is None:
+        raise Exception("Firestore not configured")
     team_ref = db.collection("teams").document(team_id)
     team_doc = team_ref.get()
     

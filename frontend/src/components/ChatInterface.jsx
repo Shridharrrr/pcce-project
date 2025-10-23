@@ -35,6 +35,7 @@ const ChatInterface = ({ selectedProject }) => {
     try {
       setLoading(true);
       setError(null);
+      
       const token = await getIdToken();
       
       if (!token) {
@@ -74,6 +75,7 @@ const ChatInterface = ({ selectedProject }) => {
     try {
       setSending(true);
       setError(null);
+      
       const token = await getIdToken();
       
       if (!token) {
