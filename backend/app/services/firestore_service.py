@@ -14,3 +14,6 @@ def get_document(collection_name: str, doc_id: str):
 def get_collection(collection_name: str):
     docs = db.collection(collection_name).stream()
     return [doc.to_dict() for doc in docs]
+
+def update_document(collection_name: str, doc_id: str, data: dict):
+    db.collection(collection_name).document(doc_id).update(data)
