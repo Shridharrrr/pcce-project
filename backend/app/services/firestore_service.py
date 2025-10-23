@@ -45,13 +45,27 @@ def query_collection(collection_name: str, field: str, operator: str, value: Any
     """Query a collection with a specific condition"""
     if db is None:
         raise Exception("Firestore not configured")
+    
     docs = db.collection(collection_name).where(field, operator, value).stream()
     return [doc.to_dict() for doc in docs]
 
+
 def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
-    """Get user by email address"""
-    users = query_collection("users", "email", "==", email)
-    return users[0] if users else None
+    """Get user by email address from Firestore"""
+    try:
+        users = query_collection("users", "email", "==", email)
+        if not users:
+            return None
+        
+        user = users[0]
+        # Ensure 'userId' exists in the returned document
+        if "userId" not in user:
+            user["userId"] = user.get("uid") or user.get("id")  # fallback
+        return user
+    except Exception as e:
+        print(f"Error fetching user by email {email}: {e}")
+        return None
+
 
 def get_team_messages(team_id: str, limit: int = 50) -> List[Dict[str, Any]]:
     """Get messages for a specific team, ordered by creation time"""
