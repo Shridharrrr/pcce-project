@@ -38,7 +38,6 @@ async def create_team(
     team_id = str(uuid.uuid4())
     admin_email = current_user.get("email")
     admin_id = current_user.get("uid")
-<<<<<<< HEAD
     
     # Get or create admin user info
     admin_user = get_user_by_email(admin_email)
@@ -53,12 +52,6 @@ async def create_team(
         }
         create_document("users", admin_id, admin_user)
     
-=======
-
-    # Ensure admin user exists in Firestore
-    admin_user = ensure_user_in_firestore(current_user)
-
->>>>>>> 065ca67c67fd18d8d229eaf68ed59a384117ba53
     # Create team members list starting with admin
     members = [TeamMember(
         user_id=admin_id,

@@ -89,12 +89,7 @@ async def get_team_messages_endpoint(
     if not is_member:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     
-<<<<<<< HEAD
     messages = fetch_team_messages(team_id, limit)
-=======
-    # Await the async function here
-    messages = await get_team_messages(team_id, limit)
->>>>>>> 065ca67c67fd18d8d229eaf68ed59a384117ba53
     return messages
 
 

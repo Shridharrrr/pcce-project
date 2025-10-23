@@ -26,11 +26,7 @@ const ProjectSidebar = ({ selectedProject, onProjectSelect, onCreateProject, ref
         throw new Error('No authentication token available');
       }
 
-<<<<<<< HEAD
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.2:8000'}/me/teams/`, {
-=======
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/teams/`, {
->>>>>>> 065ca67c67fd18d8d229eaf68ed59a384117ba53
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.2:8000'}/teams/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
