@@ -30,7 +30,7 @@ const ChatSummary = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/summaries/team/${selectedProject.teamId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/team/${selectedProject.teamId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ const ChatSummary = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/summaries/generate`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/generate`,
         {
           method: "POST",
           headers: {
@@ -114,7 +114,7 @@ const ChatSummary = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/summaries/${summaryId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/${summaryId}`,
         {
           method: "DELETE",
           headers: {

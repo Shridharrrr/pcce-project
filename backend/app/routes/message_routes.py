@@ -6,6 +6,7 @@ from app.services.firestore_service import (
     create_document, get_document, get_team_messages as fetch_team_messages, 
     update_document, delete_document, get_user_by_email
 )
+from app.services.vector_db_service import add_message_to_vector_db
 from app.dependencies.auth import get_current_user
 import uuid
 
@@ -62,6 +63,20 @@ async def create_message(
     )
     
     create_document("messages", message_id, message.dict())
+    
+    # Add message to vector database for RAG
+    if message_data.message_type == "text" and message_data.content:
+        add_message_to_vector_db(
+            message_id=message_id,
+            content=message_data.content,
+            metadata={
+                "team_id": message_data.team_id,
+                "sender_name": sender_name,
+                "sender_id": user_id,
+                "timestamp": message.created_at.isoformat(),
+                "message_type": message_data.message_type
+            }
+        )
     
     # Update team's last message timestamp
     update_document("teams", message_data.team_id, {"last_message_at": datetime.utcnow()})

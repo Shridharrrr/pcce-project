@@ -164,7 +164,8 @@ export default function Dashboard() {
           
           {/* Main Content Area */}
           {showThinkBuddy ? (
-            <ThinkBuddyAssistant projects={projects} />
+            <ThinkBuddyAssistant projects={Array.isArray(projects) ? projects : []} />
+
           ) : (
             <div className="flex-1 flex flex-col">
               {/* Tab Navigation */}

@@ -5,8 +5,8 @@ from app.routes.team_routes import router as team_router
 from app.routes.message_routes import router as message_router
 from app.routes.user_routes import router as user_router
 from app.routes.todo_routes import router as todo_router
-from app.routes.summary_routes import router as summary_router
 from app.routes.assistant_routes import router as assistant_router
+from app.routes.summary_routes import router as summary_router
 from app.services.websocket_service import websocket_endpoint
 from app.dependencies.auth import get_current_user
 from app.services.firestore_service import get_user_teams
@@ -28,8 +28,8 @@ app.include_router(user_router)
 app.include_router(team_router)
 app.include_router(message_router)
 app.include_router(todo_router)
-app.include_router(summary_router)
 app.include_router(assistant_router)
+app.include_router(summary_router)
 
 # WebSocket endpoint
 @app.websocket("/ws/{team_id}")

@@ -47,7 +47,7 @@ const TodoList = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/todos/team/${selectedProject.teamId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/todos/team/${selectedProject.teamId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -99,7 +99,7 @@ const TodoList = ({ selectedProject }) => {
       console.log("Creating todo:", todoData);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/todos/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/todos/`,
         {
           method: "POST",
           headers: {
@@ -145,7 +145,7 @@ const TodoList = ({ selectedProject }) => {
       console.log("Deleting todo:", todoId);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/todos/${todoId}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/todos/${todoId}`,
         {
           method: "DELETE",
           headers: {

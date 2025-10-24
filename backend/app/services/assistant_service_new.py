@@ -9,8 +9,8 @@ from app.services.firestore_service import get_team_messages
 # Load environment variables
 load_dotenv()
 
-# Configure Gemini - use env variable or fallback to hardcoded key
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyArgXw1-BZKu-dXdbXr_CfNrPiB4eoUEcw"
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 
@@ -23,7 +23,7 @@ class AssistantService:
             print("Warning: GEMINI_API_KEY not found")
         self.conversation_history = {}  # Store conversation history per user
     
-    def get_conversation_history(self, user_id: str) -> List[Dict[str, str]]:
+    def search_relevant_context(query: str, team_id: str = None, n_results: int = 5) -> List[Dict[str, str]]:
         """Get conversation history for a user"""
         if user_id not in self.conversation_history:
             self.conversation_history[user_id] = []
@@ -81,51 +81,44 @@ class AssistantService:
             # Retrieve relevant context from vector DB if RAG is enabled
             context_messages = []
             retrieved_sources = []
-            
-            # Build context from RAG
-            context_data = ""
-                # Search for relevant messages from the team
+            context_text = ""
+                            # Search for relevant messages from the team
                 context_messages = search_relevant_context(
                     query=message,
                     team_id=project_context,
                     n_results=5
                 )
                 
-                # Format sources for response and build context
                 if context_messages:
-                    context_parts = ["\n**Relevant Team Messages:**"]
+                    context_text = "\n**Relevant Team Conversations:**\n"
                     for i, msg in enumerate(context_messages, 1):
+                        sender = msg.get('sender_name', 'Unknown')
+                        content = msg.get('content', '')
+                        context_text += f"{i}. {sender}: {content[:150]}...\n"
+                        
+                        # Format sources for response
                         retrieved_sources.append({
-                            "sender": msg.get('sender_name', 'Unknown'),
-                            "content": msg.get('content', '')[:100] + "...",
+                            "sender": sender,
+                            "content": content[:100] + "...",
                             "timestamp": msg.get('timestamp', ''),
                             "relevance": round(msg.get('relevance_score', 0), 2)
                         })
-                        context_parts.append(f"{i}. {msg.get('sender_name', 'Unknown')}: {msg.get('content', '')[:300]}")
-                    
-                    context_data = "\n".join(context_parts)
             
-            # Build the prompt
-            system_prompt = """You are ThinkBuddy, an intelligent AI assistant designed to help with:
-- Code explanation and debugging
-- Project planning and best practices
-- Technical questions and problem-solving
-- Code review and suggestions
-- General programming assistance
-- Project summarization and analysis
+            # Build the system prompt
+            system_prompt = """You are ThinkBuddy, an intelligent AI assistant for team collaboration. You help with:
+- Answering questions about team conversations
+- Providing context from previous discussions
+- Helping with project-related queries
+- General assistance and information
 
-You are helpful, concise, and provide actionable insights. 
-
-IMPORTANT: When relevant team messages or project context is provided below, you MUST use that information to give accurate, personalized responses based on the actual project data. Do NOT give generic responses when specific context is available.
-
-For project summaries: Analyze the team messages provided and give specific insights about what the team has discussed, decisions made, and current project status."""
+You are helpful, concise, and provide actionable insights. When relevant context from team conversations is provided, use it to give accurate and personalized responses."""
 
             # Format conversation history
             history_text = ""
             if history:
                 history_text = "\n**Recent Conversation:**\n"
                 for msg in history[-5:]:  # Last 5 messages
-                    role = "User" if msg['role'] == 'user' else "Assistant"
+                    role = "You" if msg['role'] == 'user' else "Assistant"
                     history_text += f"{role}: {msg['content']}\n"
             
             # Build final prompt
@@ -133,9 +126,7 @@ For project summaries: Analyze the team messages provided and give specific insi
 
 {history_text}
 
-{context_data if context_data else ""}
-
-{"**Project Context:** " + project_context if project_context else ""}
+{context_text}
 
 **User Question:** {message}
 
@@ -155,7 +146,7 @@ For project summaries: Analyze the team messages provided and give specific insi
             
             return {
                 "response": assistant_response,
-                "sources": retrieved_sources if use_rag else [],
+                "sources": retrieved_sources,
                 "timestamp": datetime.now().isoformat(),
                 "project_context": project_context or "general"
             }
@@ -171,29 +162,8 @@ For project summaries: Analyze the team messages provided and give specific insi
         description: str,
         additional_info: Dict[str, Any] = None
     ) -> bool:
-        """Add project knowledge to the vector database"""
-        try:
-            content = f"""Project: {project_name}
-Description: {description}
-{f"Additional Info: {additional_info}" if additional_info else ""}"""
-            
-            # Add to vector database
-            from app.services.vector_db_service import add_message_to_vector_db
-            return add_message_to_vector_db(
-                message_id=f"project_{project_id}",
-                content=content,
-                metadata={
-                    "team_id": project_id,
-                    "sender_name": "System",
-                    "message_type": "project_info",
-                    "project_name": project_name,
-                    "timestamp": datetime.now().isoformat(),
-                    **(additional_info or {})
-                }
-            )
-        except Exception as e:
-            print(f"Error adding project knowledge: {str(e)}")
-            return False
+        """Add project knowledge - placeholder for future implementation"""
+        return True
     
     def add_code_knowledge(
         self,
@@ -203,30 +173,8 @@ Description: {description}
         description: str,
         project_id: Optional[str] = None
     ) -> bool:
-        """Add code snippet to the knowledge base"""
-        try:
-            content = f"""Code Snippet ({language}):
-{description}
-
-```{language}
-{code}
-```"""
-            
-            from app.services.vector_db_service import add_message_to_vector_db
-            return add_message_to_vector_db(
-                message_id=f"code_{code_id}",
-                content=content,
-                metadata={
-                    "team_id": project_id or "general",
-                    "sender_name": "System",
-                    "message_type": "code_snippet",
-                    "language": language,
-                    "timestamp": datetime.now().isoformat()
-                }
-            )
-        except Exception as e:
-            print(f"Error adding code knowledge: {str(e)}")
-            return False
+        """Add code knowledge - placeholder for future implementation"""
+        return True
 
 # Global instance
 assistant_service = AssistantService()
