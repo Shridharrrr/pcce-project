@@ -75,17 +75,16 @@ async def chat_with_assistant(
 
 @router.post("/clear-history", response_model=StatusResponse)
 async def clear_conversation_history(
-    project_context: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Clear conversation history for the current user (optionally for specific project)"""
+    """Clear conversation history for the current user"""
     try:
         user_id = current_user.get("uid")
-        assistant_service.clear_history(user_id, project_context)
+        assistant_service.clear_history(user_id)
         
         return StatusResponse(
             success=True,
-            message=f"Conversation history cleared successfully{' for project' if project_context else ''}"
+            message="Conversation history cleared successfully"
         )
     except Exception as e:
         raise HTTPException(
@@ -95,18 +94,16 @@ async def clear_conversation_history(
 
 @router.get("/history")
 async def get_conversation_history(
-    project_context: str = "general",
     current_user: dict = Depends(get_current_user)
 ):
-    """Get conversation history for the current user and project"""
+    """Get conversation history for the current user"""
     try:
         user_id = current_user.get("uid")
-        history = assistant_service.get_conversation_history(user_id, project_context)
+        history = assistant_service.get_conversation_history(user_id)
         
         return {
             "history": history,
-            "count": len(history),
-            "project_context": project_context
+            "count": len(history)
         }
     except Exception as e:
         raise HTTPException(
