@@ -193,3 +193,73 @@ def get_user_todos(user_email: str) -> List[Dict[str, Any]]:
 def delete_todo(todo_id: str) -> bool:
     """Delete a todo from Firestore"""
     return delete_document("todos", todo_id)
+
+# Assistant chat history functions
+def save_assistant_message(user_id: str, message_data: Dict[str, Any], project_context: str = "general") -> bool:
+    """Save an assistant chat message to Firestore (per project)"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    try:
+        # Create a unique message ID
+        message_id = f"{user_id}_{datetime.utcnow().timestamp()}"
+        message_data["created_at"] = datetime.utcnow()
+        # Store messages per project context
+        db.collection("assistant_chats").document(user_id).collection(project_context).document(message_id).set(message_data)
+        return True
+    except Exception as e:
+        print(f"Error saving assistant message: {e}")
+        return False
+
+def get_assistant_chat_history(user_id: str, project_context: str = "general", limit: int = 50) -> List[Dict[str, Any]]:
+    """Get assistant chat history for a specific user and project"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    try:
+        messages_ref = db.collection("assistant_chats").document(user_id).collection(project_context)
+        messages_ref = messages_ref.order_by("created_at", direction="ASCENDING").limit(limit)
+        docs = messages_ref.stream()
+        messages = []
+        for doc in docs:
+            msg_data = doc.to_dict()
+            msg_data["id"] = doc.id
+            messages.append(msg_data)
+        return messages
+    except Exception as e:
+        print(f"Error fetching assistant chat history: {e}")
+        # Fallback without ordering if index doesn't exist
+        try:
+            messages_ref = db.collection("assistant_chats").document(user_id).collection(project_context).limit(limit)
+            docs = messages_ref.stream()
+            messages = []
+            for doc in docs:
+                msg_data = doc.to_dict()
+                msg_data["id"] = doc.id
+                messages.append(msg_data)
+            return messages
+        except Exception as e2:
+            print(f"Error fetching assistant chat history without order: {e2}")
+            return []
+
+def clear_assistant_chat_history(user_id: str, project_context: str = None) -> bool:
+    """Clear assistant chat history for a user (optionally for specific project)"""
+    if db is None:
+        raise Exception("Firestore not configured")
+    try:
+        if project_context:
+            # Clear specific project history
+            messages_ref = db.collection("assistant_chats").document(user_id).collection(project_context)
+            docs = messages_ref.stream()
+            for doc in docs:
+                doc.reference.delete()
+        else:
+            # Clear all project histories
+            user_doc_ref = db.collection("assistant_chats").document(user_id)
+            collections = user_doc_ref.collections()
+            for collection in collections:
+                docs = collection.stream()
+                for doc in docs:
+                    doc.reference.delete()
+        return True
+    except Exception as e:
+        print(f"Error clearing assistant chat history: {e}")
+        return False

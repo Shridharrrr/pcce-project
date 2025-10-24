@@ -13,16 +13,10 @@ const PREDEFINED_PROMPTS = [
 
 const ThinkBuddyAssistant = ({ projects = [] }) => {
   const { user, getIdToken } = useAuth();
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      role: "assistant",
-      content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [selectedProject, setSelectedProject] = useState("general");
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -36,6 +30,90 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
     { teamId: "ai", teamName: "AI & Machine Learning", description: "AI models, training, and deployment" },
     { teamId: "mobile", teamName: "Mobile Development", description: "iOS, Android, and cross-platform" },
   ];
+
+  // Load chat history for the selected project
+  const loadChatHistory = async (projectContext) => {
+    if (!user) {
+      setIsLoadingHistory(false);
+      return;
+    }
+
+    setIsLoadingHistory(true);
+
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        setIsLoadingHistory(false);
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/assistant/history?project_context=${projectContext}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.history && data.history.length > 0) {
+          // Transform the history to match the message format
+          const transformedMessages = data.history.map((msg, index) => ({
+            id: index + 1,
+            role: msg.role,
+            content: msg.content,
+            timestamp: msg.timestamp,
+            sources: msg.sources || [],
+            project_context: msg.project_context || "general"
+          }));
+          setMessages(transformedMessages);
+        } else {
+          // No history, show welcome message
+          setMessages([{
+            id: 1,
+            role: "assistant",
+            content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
+            timestamp: new Date().toISOString()
+          }]);
+        }
+      } else {
+        // Failed to load, show welcome message
+        setMessages([{
+          id: 1,
+          role: "assistant",
+          content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
+          timestamp: new Date().toISOString()
+        }]);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      // Show welcome message on error
+      setMessages([{
+        id: 1,
+        role: "assistant",
+        content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Load chat history on mount
+  useEffect(() => {
+    loadChatHistory(selectedProject);
+  }, [user, getIdToken]);
+
+  // Load chat history when project changes
+  useEffect(() => {
+    if (user) {
+      loadChatHistory(selectedProject);
+    }
+  }, [selectedProject]);
 
   useEffect(() => {
     scrollToBottom();
@@ -142,6 +220,47 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const handleClearChat = async () => {
+    const projectName = availableProjects.find(p => p.teamId === selectedProject)?.teamName || "General";
+    if (!confirm(`Are you sure you want to clear your chat history for "${projectName}"? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = await getIdToken();
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/assistant/clear-history?project_context=${selectedProject}`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response.ok) {
+        // Clear local messages and show welcome message
+        setMessages([{
+          id: 1,
+          role: "assistant",
+          content: "Hello! I'm ThinkBuddy, your AI assistant. Select a project context and ask me anything!",
+          timestamp: new Date().toISOString()
+        }]);
+      } else {
+        console.error('Failed to clear chat history');
+        alert('Failed to clear chat history. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      alert('Error clearing chat history. Please try again.');
+    }
+  };
+
 
   return (
     <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col h-full">
@@ -161,7 +280,17 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
               <p className="text-xs text-gray-500">Your AI-powered productivity companion</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleClearChat}
+              className="px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors flex items-center gap-2"
+              title="Clear chat history"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Clear
+            </button>
             <span className="text-sm font-medium text-gray-700">Project:</span>
             <select
               value={selectedProject}
@@ -180,6 +309,15 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {isLoadingHistory ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading your chat history...</p>
+            </div>
+          </div>
+        ) : (
+          <>
         {messages.map((message) => (
           <div
             key={message.id}
@@ -255,6 +393,8 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
         )}
 
         <div ref={messagesEndRef} />
+          </>
+        )}
       </div>
 
       {/* Input Area */}
