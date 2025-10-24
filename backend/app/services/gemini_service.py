@@ -80,7 +80,7 @@ Summary: [Your concise overview]
 
 Important decisions made in the conversation:
 - [Decision 1]
-- [Decision 2]
+- [Decision 2 if exist]
 
 """
     
