@@ -67,31 +67,63 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(messageToSend);
+    try {
+      // Check if user is logged in
+      if (!user) {
+        throw new Error('Please log in to use the AI assistant');
+      }
+
+      // Get Firebase ID token
+      const token = await user.getIdToken();
+      
+      const response = await fetch('http://127.0.0.2:8000/api/assistant/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: messageToSend,
+          project_context: selectedProject !== 'general' ? selectedProject : null,
+          use_rag: true
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('API Error:', response.status, errorData);
+        throw new Error(errorData.detail || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
       const assistantMessage = {
         id: messages.length + 2,
         role: "assistant",
-        content: aiResponse,
+        content: data.response,
+        timestamp: data.timestamp,
+        sources: data.sources || []
+      };
+      
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error calling assistant API:', error);
+      const errorMessage = {
+        id: messages.length + 2,
+        role: "assistant",
+        content: `I apologize, but I encountered an error: ${error.message}. Please ensure the backend server is running and try again.`,
         timestamp: new Date().toISOString()
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   const handlePredefinedPrompt = (prompt) => {
     handleSendMessage(prompt);
   };
 
-  // Mock AI response generator (replace with actual API integration)
-  const generateAIResponse = (userInput) => {
-    const projectContext = availableProjects.find(p => p.teamId === selectedProject);
-    const contextName = projectContext?.teamName || "General";
-    
-    return `Based on your "${contextName}" project context: I understand you're asking about "${userInput}". This is a simulated response. In a real implementation, this would connect to an AI API to provide intelligent responses based on your project context.`;
-  };
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -133,6 +165,24 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
           </div>
         </div>
       </div>
+
+      {/* Login Warning Banner */}
+      {!user && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong className="font-medium">Authentication Required:</strong> Please log in to use the AI assistant.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -208,7 +258,7 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
               <button
                 key={index}
                 onClick={() => handlePredefinedPrompt(prompt)}
-                disabled={isTyping}
+                disabled={isTyping || !user}
                 className="bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-purple-200"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,16 +277,16 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask me anything... (Press Enter to send, Shift+Enter for new line)"
+                placeholder={!user ? "Please log in to use the assistant..." : "Ask me anything... (Press Enter to send, Shift+Enter for new line)"}
                 className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none resize-none shadow-sm text-gray-900 placeholder:text-gray-400"
                 rows="1"
                 style={{ minHeight: '48px', maxHeight: '120px' }}
-                disabled={isTyping}
+                disabled={isTyping || !user}
               />
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isTyping}
+              disabled={!inputMessage.trim() || isTyping || !user}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-300 disabled:to-gray-400 text-white px-6 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center gap-2 disabled:cursor-not-allowed"
             >
               {isTyping ? (
