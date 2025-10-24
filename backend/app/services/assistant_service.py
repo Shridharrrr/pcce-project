@@ -4,7 +4,12 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from app.services.vector_db_service import search_relevant_context, add_messages_batch
-from app.services.firestore_service import get_team_messages
+from app.services.firestore_service import (
+    get_team_messages, 
+    save_assistant_message, 
+    get_assistant_chat_history,
+    clear_assistant_chat_history
+)
 
 # Load environment variables
 load_dotenv()
@@ -21,33 +26,67 @@ class AssistantService:
         """Initialize the assistant service"""
         if not GEMINI_API_KEY:
             print("Warning: GEMINI_API_KEY not found")
-        self.conversation_history = {}  # Store conversation history per user
+        self.conversation_history = {}  # Store conversation history per user per project: {user_id: {project_id: [messages]}}
     
-    def get_conversation_history(self, user_id: str) -> List[Dict[str, str]]:
-        """Get conversation history for a user"""
+    def get_conversation_history(self, user_id: str, project_context: str = "general") -> List[Dict[str, str]]:
+        """Get conversation history for a user and project - loads from Firestore if not in memory"""
         if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
-        return self.conversation_history[user_id]
-    
-    def add_to_history(self, user_id: str, role: str, content: str):
-        """Add a message to conversation history"""
-        if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
+            self.conversation_history[user_id] = {}
         
-        self.conversation_history[user_id].append({
+        if project_context not in self.conversation_history[user_id]:
+            # Load from Firestore
+            try:
+                stored_messages = get_assistant_chat_history(user_id, project_context, limit=50)
+                self.conversation_history[user_id][project_context] = stored_messages
+            except Exception as e:
+                print(f"Error loading chat history from Firestore: {e}")
+                self.conversation_history[user_id][project_context] = []
+        return self.conversation_history[user_id][project_context]
+    
+    def add_to_history(self, user_id: str, role: str, content: str, sources: List[Dict[str, Any]] = None, project_context: str = "general"):
+        """Add a message to conversation history and persist to Firestore"""
+        if user_id not in self.conversation_history:
+            self.conversation_history[user_id] = {}
+        
+        if project_context not in self.conversation_history[user_id]:
+            self.conversation_history[user_id][project_context] = []
+        
+        message_data = {
             "role": role,
             "content": content,
-            "timestamp": datetime.now().isoformat()
-        })
+            "timestamp": datetime.now().isoformat(),
+            "sources": sources or [],
+            "project_context": project_context
+        }
         
-        # Keep only last 20 messages to avoid token limits
-        if len(self.conversation_history[user_id]) > 20:
-            self.conversation_history[user_id] = self.conversation_history[user_id][-20:]
+        self.conversation_history[user_id][project_context].append(message_data)
+        
+        # Persist to Firestore
+        try:
+            save_assistant_message(user_id, message_data, project_context)
+        except Exception as e:
+            print(f"Error persisting message to Firestore: {e}")
+        
+        # Keep only last 50 messages in memory to avoid token limits
+        if len(self.conversation_history[user_id][project_context]) > 50:
+            self.conversation_history[user_id][project_context] = self.conversation_history[user_id][project_context][-50:]
     
-    def clear_history(self, user_id: str):
-        """Clear conversation history for a user"""
-        if user_id in self.conversation_history:
-            self.conversation_history[user_id] = []
+    def clear_history(self, user_id: str, project_context: str = None):
+        """Clear conversation history for a user from memory and Firestore"""
+        if project_context:
+            # Clear specific project history
+            if user_id in self.conversation_history and project_context in self.conversation_history[user_id]:
+                self.conversation_history[user_id][project_context] = []
+        else:
+            # Clear all project histories
+            if user_id in self.conversation_history:
+                self.conversation_history[user_id] = {}
+        
+        # Clear from Firestore
+        try:
+            clear_assistant_chat_history(user_id, project_context)
+        except Exception as e:
+            print(f"Error clearing chat history from Firestore: {e}")
     
     async def generate_response(
         self,
@@ -75,8 +114,11 @@ class AssistantService:
             # Initialize Gemini model
             model = genai.GenerativeModel('gemini-2.0-flash')
             
-            # Get conversation history
-            history = self.get_conversation_history(user_id)
+            # Normalize project context
+            normalized_context = project_context or "general"
+            
+            # Get conversation history for this specific project
+            history = self.get_conversation_history(user_id, normalized_context)
             
             # Retrieve relevant context from vector DB if RAG is enabled
             context_messages = []
@@ -180,9 +222,9 @@ class AssistantService:
             
             assistant_response = response.text.strip()
             
-            # Add to conversation history
-            self.add_to_history(user_id, "user", message)
-            self.add_to_history(user_id, "assistant", assistant_response)
+            # Add to conversation history with sources and project context
+            self.add_to_history(user_id, "user", message, sources=[], project_context=normalized_context)
+            self.add_to_history(user_id, "assistant", assistant_response, sources=retrieved_sources, project_context=normalized_context)
             
             return {
                 "response": assistant_response,
