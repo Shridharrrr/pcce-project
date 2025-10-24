@@ -84,63 +84,93 @@ class AssistantService:
             
             # Build context from RAG
             context_data = ""
-            if use_rag and project_context:
-                # Search for relevant messages from the team
+            if use_rag:
+                team_messages = []
+                if project_context:
+                    team_messages = get_team_messages(project_context)
+
+                # Search for relevant messages from the team (or all teams if no context)
+                # This searches ALL users' messages in the team, not just current user
+                print(f"🔍 Searching vector DB for: '{message}' in team: {project_context}")
                 context_messages = search_relevant_context(
                     query=message,
-                    team_id=project_context,
-                    n_results=5
+                    team_id=project_context,  # If None, searches across all teams
+                    n_results=10  # Increased to get more context from all users
                 )
+                print(f"📊 Found {len(context_messages)} relevant messages")
                 
                 # Format sources for response and build context
                 if context_messages:
-                    context_parts = ["\n**Relevant Team Messages:**"]
+                    context_parts = ["\n**Relevant Team Messages from All Team Members:**"]
                     for i, msg in enumerate(context_messages, 1):
+                        sender = msg.get("sender_name", "Unknown")
+                        content = msg.get("content", "")
+                        timestamp = msg.get("timestamp", "")
+                
                         retrieved_sources.append({
-                            "sender": msg.get('sender_name', 'Unknown'),
-                            "content": msg.get('content', '')[:100] + "...",
-                            "timestamp": msg.get('timestamp', ''),
-                            "relevance": round(msg.get('relevance_score', 0), 2)
+                            "sender": sender,
+                            "content": content[:100] + "..." if len(content) > 100 else content,
+                            "timestamp": timestamp,
+                            "relevance": round(msg.get("relevance_score", 0), 2),
                         })
-                        context_parts.append(f"{i}. {msg.get('sender_name', 'Unknown')}: {msg.get('content', '')[:300]}")
-                    
+                
+                        # Include full context for better AI understanding
+                        context_parts.append(f"{i}. [{sender}] ({timestamp}): {content[:500]}")
+                
                     context_data = "\n".join(context_parts)
-            
-            # Build the prompt
-            system_prompt = """You are ThinkBuddy, an intelligent AI assistant designed to help with:
-- Code explanation and debugging
-- Project planning and best practices
-- Technical questions and problem-solving
-- Code review and suggestions
-- General programming assistance
-- Project summarization and analysis
+                else:
+                    context_data = "No relevant team messages found."
+                
+                # Build the system prompt
+                system_prompt = """You are ThinkBuddy — an intelligent AI assistant designed to help with:
+                - Code explanation and debugging
+                - Project planning and best practices
+                - Technical questions and problem-solving
+                - Code review and suggestions
+                - General programming assistance
+                - Project summarization and analysis
+                
+                You are helpful, concise, and provide actionable insights.
+                
+                IMPORTANT:
+                When relevant team messages are provided below, they are from ALL team members — not just the current user.
+                You MUST analyze these messages collectively to give accurate, comprehensive, and context-aware responses
+                based on the entire project’s data. Avoid generic replies when specific context is available.
+                
+                For project summaries, analyze all team messages and provide clear insights about:
+                - What the team has discussed
+                - Decisions made
+                - Current project status
+                - Key contributions from each team member
+                - Overall progress and direction
+                """
+                
+                # Format recent conversation history (limit to last 5 messages)
+                history_text = ""
+                if history:
+                    history_text = "\n**Recent Conversation:**\n"
+                    for msg in history[-5:]:
+                        role = "User" if msg["role"] == "user" else "Assistant"
+                        history_text += f"{role}: {msg['content']}\n"
+                
+                # Build the final prompt for the AI model
+                full_prompt = f"""
+                {system_prompt}
+                
+                **Team Messages (All Members):**
+                {team_context if team_context else "No messages available."}
+                
+                **Relevant Context:**
+                {context_data}
+                
+                {history_text}
+                
+                **User Question:** {message}
+                
+                **Your Response:**
+                """
+                
 
-You are helpful, concise, and provide actionable insights. 
-
-IMPORTANT: When relevant team messages or project context is provided below, you MUST use that information to give accurate, personalized responses based on the actual project data. Do NOT give generic responses when specific context is available.
-
-For project summaries: Analyze the team messages provided and give specific insights about what the team has discussed, decisions made, and current project status."""
-
-            # Format conversation history
-            history_text = ""
-            if history:
-                history_text = "\n**Recent Conversation:**\n"
-                for msg in history[-5:]:  # Last 5 messages
-                    role = "User" if msg['role'] == 'user' else "Assistant"
-                    history_text += f"{role}: {msg['content']}\n"
-            
-            # Build final prompt
-            full_prompt = f"""{system_prompt}
-
-{history_text}
-
-{context_data if context_data else ""}
-
-{"**Project Context:** " + project_context if project_context else ""}
-
-**User Question:** {message}
-
-**Your Response:**"""
 
             # Generate response with Gemini
             response = model.generate_content(full_prompt)

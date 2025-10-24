@@ -12,7 +12,7 @@ const PREDEFINED_PROMPTS = [
 ];
 
 const ThinkBuddyAssistant = ({ projects = [] }) => {
-  const { user, getIdToken } = useAuth();
+  const { user } = useAuth();
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -53,8 +53,7 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
   };
 
   const handleSendMessage = async (customMessage) => {
-    // Check if customMessage is an event object and ignore it
-    const messageToSend = (typeof customMessage === 'string' ? customMessage : inputMessage).trim();
+    const messageToSend = customMessage || inputMessage.trim();
     if (!messageToSend || isTyping) return;
 
     const userMessage = {
@@ -68,61 +67,18 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
     setInputMessage("");
     setIsTyping(true);
 
-    try {
-      // Get authentication token
-      const token = await getIdToken();
-      
-      if (!token) {
-        throw new Error('No authentication token available');
-      }
-
-      // Call the real AI assistant API
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/assistant/chat`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: messageToSend,
-            project_context: selectedProject !== 'general' ? selectedProject : null,
-            use_rag: true
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      const assistantMessage = {
-        id: messages.length + 2,
-        role: "assistant",
-        content: data.response,
-        timestamp: data.timestamp || new Date().toISOString(),
-        sources: data.sources || []
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error calling AI assistant:', error);
-      
-      // Fallback to mock response if API fails
+    // Simulate AI response (replace with actual API call)
+    setTimeout(() => {
       const aiResponse = generateAIResponse(messageToSend);
       const assistantMessage = {
         id: messages.length + 2,
         role: "assistant",
-        content: `⚠️ Using offline mode. ${aiResponse}`,
+        content: aiResponse,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, assistantMessage]);
-    } finally {
       setIsTyping(false);
-    }
+    }, 1500);
   };
 
   const handlePredefinedPrompt = (prompt) => {
@@ -211,20 +167,6 @@ const ThinkBuddyAssistant = ({ projects = [] }) => {
                     : 'bg-white text-gray-900 border border-gray-200'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                  
-                  {/* Show sources if available */}
-                  {message.sources && message.sources.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">📚 Sources from project context:</p>
-                      <div className="space-y-1">
-                        {message.sources.map((source, idx) => (
-                          <div key={idx} className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
-                            <span className="font-medium">{source.sender}:</span> {source.content}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 <span className="text-xs text-gray-400 mt-1 px-1">
                   {formatTime(message.timestamp)}
