@@ -102,7 +102,7 @@ export default function Dashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">WorkSpace Hub</h1>
+                <h1 className="text-2xl font-bold bg-blue-600 bg-clip-text text-transparent">Synapse</h1>
               </div>
               <nav className="ml-10 flex space-x-1">
                 <Link
@@ -161,10 +161,10 @@ export default function Dashboard() {
             <ThinkBuddyAssistant projects={Array.isArray(projects) ? projects : []} />
 
           ) : (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col overflow-hidden">
               {/* Tab Navigation */}
               {selectedProject && (
-                <div className="bg-white border-b border-gray-200 px-6 shadow-sm">
+                <div className="bg-white border-b border-gray-200 px-6 shadow-sm flex-shrink-0">
                   <div className="flex gap-6">
                     <button
                       onClick={() => setActiveTab("chat")}
@@ -201,13 +201,15 @@ export default function Dashboard() {
               )}
               
               {/* Content based on active tab */}
-              {activeTab === "chat" ? (
-                <ChatInterface selectedProject={selectedProject} />
-              ) : activeTab === "todos" ? (
-                <TodoList selectedProject={selectedProject} />
-              ) : (
-                <ChatSummary selectedProject={selectedProject} />
-              )}
+              <div className="flex-1 overflow-hidden">
+                {activeTab === "chat" ? (
+                  <ChatInterface selectedProject={selectedProject} />
+                ) : activeTab === "todos" ? (
+                  <TodoList selectedProject={selectedProject} />
+                ) : (
+                  <ChatSummary selectedProject={selectedProject} />
+                )}
+              </div>
             </div>
           )}
         </main>

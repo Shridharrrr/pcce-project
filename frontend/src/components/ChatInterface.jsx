@@ -273,7 +273,7 @@ const ChatInterface = ({ selectedProject }) => {
 
   if (!selectedProject) {
     return (
-      <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+      <div className="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center mt-60">
         <div className="text-center">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,9 +288,9 @@ const ChatInterface = ({ selectedProject }) => {
   }
 
   return (
-    <div className="flex-1 bg-gradient-to-br from-white to-gray-50 flex flex-col">
+    <div className="h-full bg-gradient-to-br from-white to-gray-50 flex flex-col overflow-hidden">
       {/* Chat Header */}
-      <div className="border-b border-gray-200 p-4 bg-white shadow-sm">
+      <div className="border-b border-gray-200 p-4 bg-white shadow-sm flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
