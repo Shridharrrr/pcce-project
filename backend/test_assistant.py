@@ -50,25 +50,34 @@ else:
 # Test 3: Test ChromaDB service
 print("\n[3/5] Testing ChromaDB service...")
 try:
-    from app.services.chroma_service import chroma_service
-    print("✅ ChromaDB service initialized")
+    from app.services.vector_db_service import (
+        add_message_to_vector_db, 
+        search_relevant_context,
+        get_collection_stats
+    )
+    print("✅ Vector DB service imported")
     
     # Test adding and searching
-    test_id = "test_conversation_001"
-    success = chroma_service.add_conversation(
-        conversation_id=test_id,
-        content="Test conversation for diagnostics",
-        metadata={"test": True}
+    test_id = "test_message_001"
+    success = add_message_to_vector_db(
+        message_id=test_id,
+        content="This is a test message about project planning and development",
+        metadata={
+            "team_id": "test_team",
+            "sender_name": "Test User",
+            "message_type": "text",
+            "timestamp": "2025-01-01T00:00:00"
+        }
     )
     if success:
-        print("✅ Can write to ChromaDB")
+        print("✅ Can write to Vector DB")
     
-    results = chroma_service.search_conversations("test", n_results=1)
-    if results['documents']:
-        print("✅ Can search ChromaDB")
+    results = search_relevant_context("project planning", team_id="test_team", n_results=1)
+    if results:
+        print(f"✅ Can search Vector DB - Found {len(results)} results")
     
-    # Cleanup
-    chroma_service.delete_conversation(test_id)
+    stats = get_collection_stats()
+    print(f"✅ Vector DB stats: {stats}")
     print("✅ ChromaDB fully functional")
     
 except Exception as e:
@@ -133,5 +142,5 @@ print("If any test failed (❌), fix the issue and run this script again.")
 print("\nTo start the server:")
 print("  python main.py")
 print("\nTo test the API endpoint:")
-print("  curl http://127.0.0.2:8000/api/assistant/health")
+print("  curl http://127.0.0.1:8000/api/assistant/health")
 print("=" * 60)
