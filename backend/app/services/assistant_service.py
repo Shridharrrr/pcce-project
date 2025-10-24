@@ -4,12 +4,7 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from app.services.vector_db_service import search_relevant_context, add_messages_batch
-from app.services.firestore_service import (
-    get_team_messages, 
-    save_assistant_message, 
-    get_assistant_chat_history,
-    clear_assistant_chat_history
-)
+from app.services.firestore_service import get_team_messages
 
 # Load environment variables
 load_dotenv()
@@ -26,67 +21,33 @@ class AssistantService:
         """Initialize the assistant service"""
         if not GEMINI_API_KEY:
             print("Warning: GEMINI_API_KEY not found")
-        self.conversation_history = {}  # Store conversation history per user per project: {user_id: {project_id: [messages]}}
+        self.conversation_history = {}  # Store conversation history per user
     
-    def get_conversation_history(self, user_id: str, project_context: str = "general") -> List[Dict[str, str]]:
-        """Get conversation history for a user and project - loads from Firestore if not in memory"""
+    def get_conversation_history(self, user_id: str) -> List[Dict[str, str]]:
+        """Get conversation history for a user"""
         if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = {}
-        
-        if project_context not in self.conversation_history[user_id]:
-            # Load from Firestore
-            try:
-                stored_messages = get_assistant_chat_history(user_id, project_context, limit=50)
-                self.conversation_history[user_id][project_context] = stored_messages
-            except Exception as e:
-                print(f"Error loading chat history from Firestore: {e}")
-                self.conversation_history[user_id][project_context] = []
-        return self.conversation_history[user_id][project_context]
+            self.conversation_history[user_id] = []
+        return self.conversation_history[user_id]
     
-    def add_to_history(self, user_id: str, role: str, content: str, sources: List[Dict[str, Any]] = None, project_context: str = "general"):
-        """Add a message to conversation history and persist to Firestore"""
+    def add_to_history(self, user_id: str, role: str, content: str):
+        """Add a message to conversation history"""
         if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = {}
+            self.conversation_history[user_id] = []
         
-        if project_context not in self.conversation_history[user_id]:
-            self.conversation_history[user_id][project_context] = []
-        
-        message_data = {
+        self.conversation_history[user_id].append({
             "role": role,
             "content": content,
-            "timestamp": datetime.now().isoformat(),
-            "sources": sources or [],
-            "project_context": project_context
-        }
+            "timestamp": datetime.now().isoformat()
+        })
         
-        self.conversation_history[user_id][project_context].append(message_data)
-        
-        # Persist to Firestore
-        try:
-            save_assistant_message(user_id, message_data, project_context)
-        except Exception as e:
-            print(f"Error persisting message to Firestore: {e}")
-        
-        # Keep only last 50 messages in memory to avoid token limits
-        if len(self.conversation_history[user_id][project_context]) > 50:
-            self.conversation_history[user_id][project_context] = self.conversation_history[user_id][project_context][-50:]
+        # Keep only last 20 messages to avoid token limits
+        if len(self.conversation_history[user_id]) > 20:
+            self.conversation_history[user_id] = self.conversation_history[user_id][-20:]
     
-    def clear_history(self, user_id: str, project_context: str = None):
-        """Clear conversation history for a user from memory and Firestore"""
-        if project_context:
-            # Clear specific project history
-            if user_id in self.conversation_history and project_context in self.conversation_history[user_id]:
-                self.conversation_history[user_id][project_context] = []
-        else:
-            # Clear all project histories
-            if user_id in self.conversation_history:
-                self.conversation_history[user_id] = {}
-        
-        # Clear from Firestore
-        try:
-            clear_assistant_chat_history(user_id, project_context)
-        except Exception as e:
-            print(f"Error clearing chat history from Firestore: {e}")
+    def clear_history(self, user_id: str):
+        """Clear conversation history for a user"""
+        if user_id in self.conversation_history:
+            self.conversation_history[user_id] = []
     
     async def generate_response(
         self,
@@ -114,11 +75,8 @@ class AssistantService:
             # Initialize Gemini model
             model = genai.GenerativeModel('gemini-2.0-flash')
             
-            # Normalize project context
-            normalized_context = project_context or "general"
-            
-            # Get conversation history for this specific project
-            history = self.get_conversation_history(user_id, normalized_context)
+            # Get conversation history
+            history = self.get_conversation_history(user_id)
             
             # Retrieve relevant context from vector DB if RAG is enabled
             context_messages = []
@@ -126,63 +84,93 @@ class AssistantService:
             
             # Build context from RAG
             context_data = ""
-            if use_rag and project_context:
-                # Search for relevant messages from the team
+            if use_rag:
+                team_messages = []
+                if project_context:
+                    team_messages = get_team_messages(project_context)
+
+                # Search for relevant messages from the team (or all teams if no context)
+                # This searches ALL users' messages in the team, not just current user
+                print(f"🔍 Searching vector DB for: '{message}' in team: {project_context}")
                 context_messages = search_relevant_context(
                     query=message,
-                    team_id=project_context,
-                    n_results=5
+                    team_id=project_context,  # If None, searches across all teams
+                    n_results=10  # Increased to get more context from all users
                 )
+                print(f"📊 Found {len(context_messages)} relevant messages")
                 
                 # Format sources for response and build context
                 if context_messages:
-                    context_parts = ["\n**Relevant Team Messages:**"]
+                    context_parts = ["\n**Relevant Team Messages from All Team Members:**"]
                     for i, msg in enumerate(context_messages, 1):
+                        sender = msg.get("sender_name", "Unknown")
+                        content = msg.get("content", "")
+                        timestamp = msg.get("timestamp", "")
+                
                         retrieved_sources.append({
-                            "sender": msg.get('sender_name', 'Unknown'),
-                            "content": msg.get('content', '')[:100] + "...",
-                            "timestamp": msg.get('timestamp', ''),
-                            "relevance": round(msg.get('relevance_score', 0), 2)
+                            "sender": sender,
+                            "content": content[:100] + "..." if len(content) > 100 else content,
+                            "timestamp": timestamp,
+                            "relevance": round(msg.get("relevance_score", 0), 2),
                         })
-                        context_parts.append(f"{i}. {msg.get('sender_name', 'Unknown')}: {msg.get('content', '')[:300]}")
-                    
+                
+                        # Include full context for better AI understanding
+                        context_parts.append(f"{i}. [{sender}] ({timestamp}): {content[:500]}")
+                
                     context_data = "\n".join(context_parts)
-            
-            # Build the prompt
-            system_prompt = """You are ThinkBuddy, an intelligent AI assistant designed to help with:
-- Code explanation and debugging
-- Project planning and best practices
-- Technical questions and problem-solving
-- Code review and suggestions
-- General programming assistance
-- Project summarization and analysis
+                else:
+                    context_data = "No relevant team messages found."
+                
+                # Build the system prompt
+                system_prompt = """You are ThinkBuddy — an intelligent AI assistant designed to help with:
+                - Code explanation and debugging
+                - Project planning and best practices
+                - Technical questions and problem-solving
+                - Code review and suggestions
+                - General programming assistance
+                - Project summarization and analysis
+                
+                You are helpful, concise, and provide actionable insights.
+                
+                IMPORTANT:
+                When relevant team messages are provided below, they are from ALL team members — not just the current user.
+                You MUST analyze these messages collectively to give accurate, comprehensive, and context-aware responses
+                based on the entire project’s data. Avoid generic replies when specific context is available.
+                
+                For project summaries, analyze all team messages and provide clear insights about:
+                - What the team has discussed
+                - Decisions made
+                - Current project status
+                - Key contributions from each team member
+                - Overall progress and direction
+                """
+                
+                # Format recent conversation history (limit to last 5 messages)
+                history_text = ""
+                if history:
+                    history_text = "\n**Recent Conversation:**\n"
+                    for msg in history[-5:]:
+                        role = "User" if msg["role"] == "user" else "Assistant"
+                        history_text += f"{role}: {msg['content']}\n"
+                
+                # Build the final prompt for the AI model
+                full_prompt = f"""
+                {system_prompt}
+                
+                **Team Messages (All Members):**
+                {team_context if team_context else "No messages available."}
+                
+                **Relevant Context:**
+                {context_data}
+                
+                {history_text}
+                
+                **User Question:** {message}
+                
+                **Your Response:**
+                """
+                
 
-You are helpful, concise, and provide actionable insights. 
-
-IMPORTANT: When relevant team messages or project context is provided below, you MUST use that information to give accurate, personalized responses based on the actual project data. Do NOT give generic responses when specific context is available.
-
-For project summaries: Analyze the team messages provided and give specific insights about what the team has discussed, decisions made, and current project status."""
-
-            # Format conversation history
-            history_text = ""
-            if history:
-                history_text = "\n**Recent Conversation:**\n"
-                for msg in history[-5:]:  # Last 5 messages
-                    role = "User" if msg['role'] == 'user' else "Assistant"
-                    history_text += f"{role}: {msg['content']}\n"
-            
-            # Build final prompt
-            full_prompt = f"""{system_prompt}
-
-{history_text}
-
-{context_data if context_data else ""}
-
-{"**Project Context:** " + project_context if project_context else ""}
-
-**User Question:** {message}
-
-**Your Response:**"""
 
             # Generate response with Gemini
             response = model.generate_content(full_prompt)
@@ -192,9 +180,9 @@ For project summaries: Analyze the team messages provided and give specific insi
             
             assistant_response = response.text.strip()
             
-            # Add to conversation history with sources and project context
-            self.add_to_history(user_id, "user", message, sources=[], project_context=normalized_context)
-            self.add_to_history(user_id, "assistant", assistant_response, sources=retrieved_sources, project_context=normalized_context)
+            # Add to conversation history
+            self.add_to_history(user_id, "user", message)
+            self.add_to_history(user_id, "assistant", assistant_response)
             
             return {
                 "response": assistant_response,

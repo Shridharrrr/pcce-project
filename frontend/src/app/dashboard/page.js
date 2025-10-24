@@ -90,10 +90,10 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col overflow-hidden">
+      <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-        <div className="px-6 lg:px-8">
+      <header className="bg-white shadow-md border-b border-gray-200">
+        <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex items-center gap-3">
@@ -104,18 +104,24 @@ export default function Dashboard() {
                 </div>
                 <h1 className="text-2xl font-bold bg-blue-600 bg-clip-text text-transparent">Synapse</h1>
               </div>
-              <nav className="ml-10 flex space-x-1">
+              <nav className="ml-8 flex space-x-2">
                 <Link
                   href="/dashboard"
-                  className="text-blue-600 font-semibold bg-blue-50 border-b-2 border-blue-600 px-5 py-2 rounded-t-lg transition-all"
+                  className="text-blue-600 font-semibold bg-blue-50 border-b-2 border-blue-600 px-4 py-2 rounded-t-lg transition-all"
                 >
                   Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-t-lg transition-all"
+                >
+                  Profile
                 </Link>
               </nav>
             </div>
 
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-lg">
                   {userData?.photoURL ? (
                     <img
                       src={userData.photoURL}
@@ -135,7 +141,7 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="bg-gradient-to-r from-red-50 to-red-100 hover:from-red-100 hover:to-red-200 text-red-600 px-5 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md border border-red-200"
+                  className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md"
                 >
                   Logout
                 </button>
@@ -145,7 +151,7 @@ export default function Dashboard() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex overflow-hidden">
+        <main className="flex-1 flex h-screen overflow-hidden">
           {/* Project Sidebar */}
           <ProjectSidebar
             selectedProject={selectedProject}
@@ -164,37 +170,37 @@ export default function Dashboard() {
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Tab Navigation */}
               {selectedProject && (
-                <div className="bg-white border-b border-gray-200 px-6 shadow-sm flex-shrink-0">
-                  <div className="flex gap-6">
+                <div className="bg-white border-b border-gray-200 px-4">
+                  <div className="flex gap-4">
                     <button
                       onClick={() => setActiveTab("chat")}
-                      className={`px-1 py-3 font-semibold transition-all border-b-2 ${
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
                         activeTab === "chat"
                           ? "text-blue-600 border-blue-600"
-                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
                       }`}
                     >
-                      💬 Chat
+                      Chat
                     </button>
                     <button
                       onClick={() => setActiveTab("todos")}
-                      className={`px-1 py-3 font-semibold transition-all border-b-2 ${
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
                         activeTab === "todos"
                           ? "text-blue-600 border-blue-600"
-                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
                       }`}
                     >
-                      ✓ Todos
+                      Todos
                     </button>
                     <button
                       onClick={() => setActiveTab("summary")}
-                      className={`px-1 py-3 font-semibold transition-all border-b-2 ${
+                      className={`px-4 py-3 font-medium transition-colors border-b-2 ${
                         activeTab === "summary"
                           ? "text-blue-600 border-blue-600"
-                          : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                          : "text-gray-500 border-transparent hover:text-gray-700"
                       }`}
                     >
-                      📊 Summary
+                      Summary
                     </button>
                   </div>
                 </div>
