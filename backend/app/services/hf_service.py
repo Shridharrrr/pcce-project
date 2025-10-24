@@ -8,7 +8,7 @@ load_dotenv()  # load .env if present
 
 HF_MODEL = "facebook/bart-large-cnn"
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-HF_TOKEN = "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"
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 HEADERS = {"Authorization": f"Bearer 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"} if HF_TOKEN else {}
 
