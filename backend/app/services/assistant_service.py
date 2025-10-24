@@ -84,6 +84,7 @@ class AssistantService:
             
             # Build context from RAG
             context_data = ""
+            if use_rag and project_context:
                 # Search for relevant messages from the team
                 context_messages = search_relevant_context(
                     query=message,
