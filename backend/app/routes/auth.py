@@ -7,7 +7,6 @@ from ..dependencies.auth import get_current_user
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
 
-
 class UserResponse(BaseModel):
     uid: str
     email: str
