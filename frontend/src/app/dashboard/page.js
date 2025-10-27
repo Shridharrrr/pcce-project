@@ -11,6 +11,33 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import ThinkBuddyAssistant from "../../components/ThinkBuddyAssistant";
 import TodoList from "../../components/TodoList";
 import ChatSummary from "../../components/ChatSummary";
+import {
+  Instrument_Serif,
+  Domine,
+  Electrolize,
+  Rajdhani,
+} from "next/font/google";
+
+const domine = Domine({
+  subsets: ["latin"],
+  weight: "600",
+});
+
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
+const electrolize = Electrolize({
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const rajdhani = Rajdhani({
+  subsets: ["latin"],
+  weight: "500",
+});
 
 export default function Dashboard() {
   const { user, logout, getIdToken } = useAuth();
@@ -77,7 +104,7 @@ export default function Dashboard() {
 
   const handleProjectCreated = (newProject) => {
     setSelectedProject(newProject);
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   };
 
   if (loading) {
@@ -90,38 +117,36 @@ export default function Dashboard() {
 
   return (
     <ProtectedRoute>
-      <div className="h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      {/* Header */}
-      <header className="bg-white shadow-md border-b border-gray-200">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
+      <div className="h-screen bg-white flex flex-col">
+        {/* Header */}
+        <header className="bg-white  border-b border-gray-200">
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-sm bg-blue-500 flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                  </div>
+                  <h1 className={`text-xl font-bold bg-blue-600 bg-clip-text text-transparent ${domine.className}`}>
+                    Synapse
+                  </h1>
                 </div>
-                <h1 className="text-2xl font-bold bg-blue-600 bg-clip-text text-transparent">Synapse</h1>
               </div>
-              <nav className="ml-8 flex space-x-2">
-                <Link
-                  href="/dashboard"
-                  className="text-blue-600 font-semibold bg-blue-50 border-b-2 border-blue-600 px-4 py-2 rounded-t-lg transition-all"
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  href="/profile"
-                  className="text-gray-500 hover:text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-t-lg transition-all"
-                >
-                  Profile
-                </Link>
-              </nav>
-            </div>
 
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3 bg-gray-50 px-3 py-2 rounded-lg">
+                <div className="flex items-center space-x-3 px-3 py-2 ">
                   {userData?.photoURL ? (
                     <img
                       src={userData.photoURL}
@@ -141,7 +166,7 @@ export default function Dashboard() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md"
+                  className="bg-white text-red-500 px-4 py-2 rounded-lg text-base font-medium transition-all hover:text-red-700"
                 >
                   Logout
                 </button>
@@ -161,11 +186,12 @@ export default function Dashboard() {
             onThinkBuddyClick={handleThinkBuddyClick}
             onProjectsLoaded={setProjects}
           />
-          
+
           {/* Main Content Area */}
           {showThinkBuddy ? (
-            <ThinkBuddyAssistant projects={Array.isArray(projects) ? projects : []} />
-
+            <ThinkBuddyAssistant
+              projects={Array.isArray(projects) ? projects : []}
+            />
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Tab Navigation */}
@@ -205,7 +231,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
-              
+
               {/* Content based on active tab */}
               <div className="flex-1 overflow-hidden">
                 {activeTab === "chat" ? (

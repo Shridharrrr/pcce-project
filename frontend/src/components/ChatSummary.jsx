@@ -171,12 +171,12 @@ const ChatSummary = ({ selectedProject }) => {
                 Generating...
               </span>
             ) : (
-              "🤖 Generate Summary"
+              "Generate Summary"
             )}
           </button>
         </div>
         <p className="text-sm text-gray-600">
-          AI-powered summaries of your team conversations using Google Gemini
+          AI-powered summaries of your team conversations
         </p>
       </div>
 
@@ -205,9 +205,8 @@ const ChatSummary = ({ selectedProject }) => {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl">📝</span>
                     <div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-700">
                         Generated on {new Date(summary.created_at).toLocaleDateString()} at{" "}
                         {new Date(summary.created_at).toLocaleTimeString()}
                       </p>
@@ -216,7 +215,7 @@ const ChatSummary = ({ selectedProject }) => {
                   </div>
                   <button
                     onClick={() => handleDeleteSummary(summary.summary_id)}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    className="text-red-600 hover:text-red-800 text-sm font-medium pr-4"
                   >
                     Delete
                   </button>
@@ -230,43 +229,16 @@ const ChatSummary = ({ selectedProject }) => {
                   <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">
                     {summary.participant_count} participants
                   </span>
-                  <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
-                    {summary.text_messages_count} text messages
-                  </span>
-                </div>
-
-                {/* Gemini AI Badge */}
-                <div className="mb-3">
-                  <span className="px-2 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 rounded text-xs font-bold border border-purple-300">
-                    ✨ AI Generated with Gemini
-                  </span>
                 </div>
 
                 {/* Gemini Summary */}
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 mb-3 border border-purple-200">
+                <div className="bg-blue-50 py-4 px-6 mb-3 border border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg">🤖</span>
-                    <h4 className="font-semibold text-purple-900">AI Summary</h4>
+                    <h4 className="font-bold text-blue-500 text-xl">AI Generated Summary</h4>
                   </div>
-                  <div className="text-gray-800 leading-relaxed whitespace-pre-line">
-                    {expandedSummary === summary.summary_id
-                      ? summary.content
-                      : summary.content.length > 300
-                      ? `${summary.content.substring(0, 300)}...`
-                      : summary.content}
+                  <div className="text-black font-sans leading-relaxed whitespace-pre-line">
+                    {summary.content}
                   </div>
-                  {summary.content.length > 300 && (
-                    <button
-                      onClick={() =>
-                        setExpandedSummary(
-                          expandedSummary === summary.summary_id ? null : summary.summary_id
-                        )
-                      }
-                      className="text-purple-600 hover:text-purple-800 text-sm font-medium mt-2"
-                    >
-                      {expandedSummary === summary.summary_id ? "Show less" : "Read more"}
-                    </button>
-                  )}
                 </div>
 
                 {/* Participants */}

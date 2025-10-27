@@ -267,9 +267,9 @@ const TodoList = ({ selectedProject }) => {
           <h2 className="text-2xl font-bold text-gray-800">Todo List</h2>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            + New Todo
+            + Add Todo
           </button>
         </div>
 
