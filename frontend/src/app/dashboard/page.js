@@ -11,6 +11,8 @@ import ProtectedRoute from "../../components/ProtectedRoute";
 import ThinkBuddyAssistant from "../../components/ThinkBuddyAssistant";
 import TodoList from "../../components/TodoList";
 import ChatSummary from "../../components/ChatSummary";
+import SynapseLogo from "../../components/SynapseLogo";
+import ThemedLoader from "../../components/ThemedLoader";
 import {
   Instrument_Serif,
   Domine,
@@ -109,8 +111,8 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <ThemedLoader size="lg" text="Loading dashboard..." />
       </div>
     );
   }
@@ -122,7 +124,8 @@ export default function Dashboard() {
         <header className="bg-white  border-b border-gray-200">
           <div className="px-4 sm:px-6 lg:px-6">
             <div className="flex justify-between items-center h-16">
-              <div className="flex items-center">
+              <div className="flex items-center gap-3">
+                <SynapseLogo className="w-9 h-9" />
                 <h1 className={`text-2xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>
                   SYNAPSE
                 </h1>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import ThemedLoader from "./ThemedLoader";
 import {
   Instrument_Serif,
   Domine,
@@ -164,10 +165,7 @@ const ProjectSidebar = ({
   if (loading) {
     return (
       <div className="w-96 bg-white border-r border-gray-200 h-full flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-          <p className="text-sm text-gray-500">Loading projects...</p>
-        </div>
+        <ThemedLoader size="md" text="Loading projects..." />
       </div>
     );
   }

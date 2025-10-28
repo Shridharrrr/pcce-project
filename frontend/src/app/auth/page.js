@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import SynapseLogo from "../../components/SynapseLogo";
+import ThemedLoader from "../../components/ThemedLoader";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -26,8 +28,8 @@ export default function AuthPage() {
   // Show loading while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <ThemedLoader size="lg" />
       </div>
     );
   }
@@ -79,33 +81,36 @@ export default function AuthPage() {
 
   if (user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <ThemedLoader size="lg" text="Redirecting to dashboard..." />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100">
         {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-3">
+            <SynapseLogo className="w-12 h-12" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-1">
             {isLogin ? "Welcome Back" : "Get Started"}
           </h2>
-          <p className="text-gray-600">
-            {isLogin ? "Sign in to continue to your workspace" : "Create your account to start collaborating"}
+          <p className="text-sm text-gray-600">
+            {isLogin ? "Sign in to continue" : "Create your account"}
           </p>
         </div>
 
-        <div className="flex mb-6 bg-gray-100 rounded-xl p-1.5">
+        <div className="flex mb-5 bg-gray-100 rounded-xl p-1">
           <button
             type="button"
             onClick={() => {
               setIsLogin(true);
               setError("");
             }}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+            className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
               isLogin
                 ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
                 : "text-gray-600 hover:text-gray-800"
@@ -119,7 +124,7 @@ export default function AuthPage() {
               setIsLogin(false);
               setError("");
             }}
-            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+            className={`flex-1 py-2 px-3 rounded-lg font-semibold text-sm transition-all ${
               !isLogin
                 ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md"
                 : "text-gray-600 hover:text-gray-800"
@@ -135,7 +140,7 @@ export default function AuthPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Email Address
@@ -144,7 +149,7 @@ export default function AuthPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400 text-sm"
               placeholder="you@example.com"
               required
             />
@@ -158,7 +163,7 @@ export default function AuthPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400 text-sm"
               placeholder="••••••••"
               required
             />
@@ -173,7 +178,7 @@ export default function AuthPage() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900 placeholder-gray-400 text-sm"
                 placeholder="••••••••"
                 required
               />
@@ -183,7 +188,7 @@ export default function AuthPage() {
           <button
             type="submit"
             disabled={formLoading}
-            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg text-sm"
           >
             {formLoading ? (
               <div className="flex items-center justify-center">
@@ -198,19 +203,21 @@ export default function AuthPage() {
           </button>
         </form>
 
-        <div className="my-6 flex items-center">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="mx-3 text-xs uppercase tracking-wider text-gray-400">
-            or
-          </span>
-          <div className="flex-1 h-px bg-gray-200" />
-        </div>
+        {isLogin && (
+          <>
+            <div className="my-5 flex items-center">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="mx-3 text-xs uppercase tracking-wider text-gray-400">
+                or
+              </span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
 
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading || formLoading}
-          className="w-full flex items-center justify-center space-x-3 border-2 border-gray-200 rounded-lg py-3 px-4 hover:bg-gray-50 hover:border-blue-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
-        >
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading || formLoading}
+              className="w-full flex items-center justify-center space-x-2 border-2 border-gray-200 rounded-lg py-2 px-4 hover:bg-gray-50 hover:border-blue-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
           {googleLoading ? (
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
@@ -236,14 +243,16 @@ export default function AuthPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-gray-700 font-medium">
+              <span className="text-gray-700 font-medium text-sm">
                 Continue with Google
               </span>
             </>
           )}
-        </button>
+            </button>
+          </>
+        )}
 
-        <div className="mt-6 text-center">
+        <div className="mt-5 text-center">
           <Link
             href="/"
             className="text-sm text-blue-600 hover:text-indigo-600 font-semibold transition-colors inline-flex items-center gap-1"

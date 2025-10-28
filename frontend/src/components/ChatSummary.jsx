@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "./ToastContainer";
+import ThemedLoader from "./ThemedLoader";
 
 const ChatSummary = ({ selectedProject }) => {
   const { getIdToken } = useAuth();
@@ -208,8 +209,8 @@ const ChatSummary = ({ selectedProject }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center h-full bg-white">
+        <ThemedLoader size="md" text="Loading summaries..." />
       </div>
     );
   }
@@ -217,7 +218,7 @@ const ChatSummary = ({ selectedProject }) => {
   return (
     <div className="flex flex-col h-full bg-gray-50 overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-4 flex-shrink-0">
+      <div className="bg-white border-b border-gray-200 p-4 shrink-0">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-2xl font-bold text-gray-800">Chat Summaries</h2>
           <button

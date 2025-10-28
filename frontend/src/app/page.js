@@ -5,6 +5,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Rajdhani } from "next/font/google";
+import SynapseLogo from "../components/SynapseLogo";
+import ThemedLoader from "../components/ThemedLoader";
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
@@ -23,8 +25,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <ThemedLoader size="lg" />
       </div>
     );
   }
@@ -39,9 +41,12 @@ export default function Home() {
       <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <h1 className={`text-2xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>
-              SYNAPSE
-            </h1>
+            <div className="flex items-center gap-3">
+              <SynapseLogo className="w-9 h-9" />
+              <h1 className={`text-2xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>
+                SYNAPSE
+              </h1>
+            </div>
             <Link
               href="/auth"
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
@@ -55,19 +60,17 @@ export default function Home() {
       {/* Hero Section */}
       <main className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
         <div className="text-center mb-16">
-          <div className="inline-block mb-4">
-            <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-semibold">
-              ⚡ Powered by AI
+          
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-indigo-500 bg-clip-text mb-6 leading-tight">
+            Connect&nbsp;
+            <span className="text-gray-900">
+               Your Team's <br /> Collective&nbsp;
             </span>
-          </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
-            Connect Your Team's
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Collective Intelligence
+            <span className="text-indigo-500">
+               Intelligence
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+          <p className="text-sm text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed font-semibold">
             Synapse brings your team together with real-time collaboration, AI-powered insights, 
             and intelligent task management. Experience seamless communication that adapts to your workflow.
           </p>
@@ -81,16 +84,6 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               Start Collaborating
-            </Link>
-            <Link
-              href="/auth"
-              className="flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all border-2 border-gray-200 hover:border-blue-300 shadow-md"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Watch Demo
             </Link>
           </div>
         </div>
@@ -179,7 +172,10 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <span className={`text-xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>SYNAPSE</span>
+            <div className="flex items-center gap-2">
+              <SynapseLogo className="w-7 h-7" />
+              <span className={`text-xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>SYNAPSE</span>
+            </div>
             <p className="text-gray-600 text-sm">
               2025 Synapse. Connecting teams, amplifying intelligence.
             </p>
