@@ -2,14 +2,60 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useToast } from "./ToastContainer";
 
 const ChatSummary = ({ selectedProject }) => {
   const { getIdToken } = useAuth();
+  const { showSuccess, showError, showConfirm } = useToast();
   const [summaries, setSummaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [expandedSummary, setExpandedSummary] = useState(null);
+
+  // Function to format summary text
+  const formatSummaryText = (text) => {
+    if (!text) return null;
+    
+    // Remove all asterisks
+    let formattedText = text.replace(/\*/g, '');
+    
+    // Split by lines
+    const lines = formattedText.split('\n');
+    
+    return lines.map((line, index) => {
+      let trimmedLine = line.trim();
+      
+      // Skip lines that are just "Summary:" or similar subheadings
+      if (/^(summary|important points|key points|main topics):?\s*$/i.test(trimmedLine)) {
+        return null;
+      }
+      
+      // Remove "Summary:", "Important Points:", etc. from the beginning of lines
+      trimmedLine = trimmedLine.replace(/^(summary|important points|key points|main topics):\s*/i, '');
+      
+      // Check if line is a heading (starts with a number followed by period)
+      const isHeading = /^\d+\./.test(trimmedLine);
+      
+      if (!trimmedLine) {
+        return <br key={index} />;
+      }
+      
+      if (isHeading) {
+        return (
+          <p key={index} className="font-bold text-gray-900 mt-3 mb-1">
+            {trimmedLine}
+          </p>
+        );
+      }
+      
+      return (
+        <p key={index} className="mb-1">
+          {trimmedLine}
+        </p>
+      );
+    });
+  };
 
   useEffect(() => {
     if (selectedProject) {
@@ -30,7 +76,9 @@ const ChatSummary = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/team/${selectedProject.teamId}`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"
+        }/summaries/team/${selectedProject.teamId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +116,9 @@ const ChatSummary = ({ selectedProject }) => {
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/generate`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"
+        }/summaries/generate`,
         {
           method: "POST",
           headers: {
@@ -94,7 +144,7 @@ const ChatSummary = ({ selectedProject }) => {
       }
 
       const result = await response.json();
-      console.log("Summary generated:", result);
+      console.log("Summary generated");
 
       // Refresh summaries list
       await fetchSummaries();
@@ -107,14 +157,28 @@ const ChatSummary = ({ selectedProject }) => {
   };
 
   const handleDeleteSummary = async (summaryId) => {
-    if (!confirm("Are you sure you want to delete this summary?")) return;
+    showConfirm(
+      "Are you sure you want to delete this summary?",
+      async () => {
+        try {
+          await deleteSummaryAction(summaryId);
+        } catch (err) {
+          console.error("Error deleting summary:", err);
+          showError(err.message || "Failed to delete summary");
+        }
+      }
+    );
+  };
 
+  const deleteSummaryAction = async (summaryId) => {
     try {
       const token = await getIdToken();
       if (!token) throw new Error("No authentication token available");
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/summaries/${summaryId}`,
+        `${
+          process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"
+        }/summaries/${summaryId}`,
         {
           method: "DELETE",
           headers: {
@@ -128,9 +192,9 @@ const ChatSummary = ({ selectedProject }) => {
       }
 
       await fetchSummaries();
+      showSuccess("Summary deleted successfully!");
     } catch (err) {
-      console.error("Error deleting summary:", err);
-      alert(err.message || "Failed to delete summary");
+      throw err;
     }
   };
 
@@ -191,9 +255,12 @@ const ChatSummary = ({ selectedProject }) => {
       <div className="flex-1 overflow-y-auto p-4">
         {summaries.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
-            <p className="mb-4">No summaries yet. Generate your first summary!</p>
+            <p className="mb-4">
+              No summaries yet. Generate your first summary!
+            </p>
             <p className="text-sm text-gray-400">
-              Summaries are generated using AI to help you quickly understand your team's conversations.
+              Summaries are generated using AI to help you quickly understand
+              your team's conversations.
             </p>
           </div>
         ) : (
@@ -207,10 +274,13 @@ const ChatSummary = ({ selectedProject }) => {
                   <div className="flex items-center gap-2">
                     <div>
                       <p className="text-sm text-gray-700">
-                        Generated on {new Date(summary.created_at).toLocaleDateString()} at{" "}
+                        Generated on{" "}
+                        {new Date(summary.created_at).toLocaleDateString()} at{" "}
                         {new Date(summary.created_at).toLocaleTimeString()}
                       </p>
-                      <p className="text-xs text-gray-400">By {summary.creator_email}</p>
+                      <p className="text-xs text-gray-400">
+                        By {summary.creator_email}
+                      </p>
                     </div>
                   </div>
                   <button
@@ -234,10 +304,12 @@ const ChatSummary = ({ selectedProject }) => {
                 {/* Gemini Summary */}
                 <div className="bg-blue-50 py-4 px-6 mb-3 border border-purple-200">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-bold text-blue-500 text-xl">AI Generated Summary</h4>
+                    <h4 className="font-bold text-blue-500 text-xl">
+                      AI Generated Summary
+                    </h4>
                   </div>
-                  <div className="text-black font-sans leading-relaxed whitespace-pre-line">
-                    {summary.content}
+                  <div className="text-black font-sans leading-relaxed">
+                    {formatSummaryText(summary.content)}
                   </div>
                 </div>
 

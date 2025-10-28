@@ -60,15 +60,15 @@ def generate_summary_from_messages(messages: List[Dict[str, Any]]) -> Dict[str, 
 
 Please analyze the following team chat conversation and create a comprehensive summary.
 
-**Conversation:**
+Conversation:
 {chat_text}
 
-**Context:**
+Context:
 - Total Messages: {total_messages}
 - Participants: {', '.join(participants)}
 - Text Messages: {text_messages_count}
 
-**Your Task:**
+Your Task:
 1. Create a concise summary (2-3 sentences) highlighting the main discussion points
 2. Identify key decisions or action items if any
 3. Note any important topics or concerns raised

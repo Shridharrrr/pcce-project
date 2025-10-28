@@ -61,7 +61,7 @@ const ProjectSidebar = ({
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"}/teams/`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.2:8000"}/teams/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -163,7 +163,7 @@ const ProjectSidebar = ({
 
   if (loading) {
     return (
-      <div className="w-80 bg-white border-r border-gray-200 h-full flex items-center justify-center">
+      <div className="w-96 bg-white border-r border-gray-200 h-full flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
           <p className="text-sm text-gray-500">Loading projects...</p>
@@ -173,14 +173,14 @@ const ProjectSidebar = ({
   }
 
   return (
-    <div className="w-80 bg-white border-gray-200 h-full flex flex-col shadow-sm">
+    <div className="w-96 bg-white border-gray-200 h-full flex flex-col shadow-sm">
       {/* Header */}
       <div className="p-4 border border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-4">
-          <h2 className={`text-2xl font-bold text-gray-900 ${domine.className}`}>Projects</h2>
+          <h2 className="text-xl font-semibold text-gray-900 font-sans">Projects</h2>
           <button
             onClick={onCreateProject}
-            className="bg-blue-600 hover:bg-blue-800 text-white px-3 py-1.5 text-xs rounded-lg font-medium transition-all flex items-center gap-1.5"
+            className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 text-xs rounded-sm font-medium transition-all flex items-center gap-1.5"
           >
             Add +
           </button>
@@ -189,10 +189,16 @@ const ProjectSidebar = ({
         {/* ThinkBuddy Button */}
         <button
           onClick={onThinkBuddyClick}
-          className="w-full bg-blue-600 text-white px-4 py-3 rounded-xl font-medium transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 mb-4"
+          className="group relative w-full bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white px-4 py-3.5 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 mb-4 overflow-hidden hover:scale-101 active:scale-95 hover:-translate-y-0.5"
         >
+          {/* Animated background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-blue-700 to-indigo-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          
+          {/* Shine effect */}
+          <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+          
           <svg
-            className="w-5 h-5"
+            className="w-5 h-5 relative z-10 group-hover:rotate-12 group-hover:scale-110 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -204,7 +210,10 @@ const ProjectSidebar = ({
               d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
             />
           </svg>
-          ThinkBuddy Assistant
+          <span className="relative z-10 group-hover:tracking-wide transition-all duration-300">
+            <span className="group-hover:hidden">ThinkBuddy Assistant</span>
+            <span className="hidden group-hover:inline">ThinkBuddy Assistant</span>
+          </span>
         </button>
 
         {/* Offline Mode Indicator */}

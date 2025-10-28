@@ -75,16 +75,17 @@ async def chat_with_assistant(
 
 @router.post("/clear-history", response_model=StatusResponse)
 async def clear_conversation_history(
+    project_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Clear conversation history for the current user"""
+    """Clear conversation history for the current user in a specific project"""
     try:
         user_id = current_user.get("uid")
-        assistant_service.clear_history(user_id)
+        assistant_service.clear_history(user_id, project_id)
         
         return StatusResponse(
             success=True,
-            message="Conversation history cleared successfully"
+            message=f"Conversation history cleared successfully for {'project ' + project_id if project_id else 'general chat'}"
         )
     except Exception as e:
         raise HTTPException(
@@ -94,16 +95,18 @@ async def clear_conversation_history(
 
 @router.get("/history")
 async def get_conversation_history(
+    project_id: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get conversation history for the current user"""
+    """Get conversation history for the current user in a specific project"""
     try:
         user_id = current_user.get("uid")
-        history = assistant_service.get_conversation_history(user_id)
+        history = assistant_service.get_conversation_history(user_id, project_id)
         
         return {
             "history": history,
-            "count": len(history)
+            "count": len(history),
+            "project_id": project_id or "general"
         }
     except Exception as e:
         raise HTTPException(
@@ -180,6 +183,25 @@ async def add_code_knowledge(
             detail=f"Failed to add code knowledge: {str(e)}"
         )
 
+@router.get("/project-chats")
+async def get_all_project_chats(
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all ThinkBuddy chat sessions for the current user across all projects"""
+    try:
+        user_id = current_user.get("uid")
+        chats = assistant_service.get_all_project_chats(user_id)
+        
+        return {
+            "chats": chats,
+            "total": len(chats)
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve project chats: {str(e)}"
+        )
+
 @router.get("/health")
 async def assistant_health_check():
     """Check if the assistant service is operational"""
@@ -190,9 +212,10 @@ async def assistant_health_check():
             "features": [
                 "Chat with AI",
                 "RAG with ChromaDB",
-                "Project context awareness",
+                "Project-specific chat history",
+                "Persistent conversation storage",
                 "Code snippet storage",
-                "Conversation history"
+                "Multi-project support"
             ]
         }
     except Exception as e:

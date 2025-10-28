@@ -90,7 +90,6 @@ export default function AuthPage() {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-100">
         {/* Logo and Title */}
         <div className="text-center mb-8">
-          
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             {isLogin ? "Welcome Back" : "Get Started"}
           </h2>

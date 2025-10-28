@@ -46,7 +46,7 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
       };
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/teams/`,
+        `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.2:8000'}/teams/`,
         {
           method: 'POST',
           headers: {
@@ -127,8 +127,8 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+    <div className="fixed inset-0 bg-white flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-2xl w-full max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Create New Project</h2>
@@ -227,12 +227,12 @@ const AddProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
                   Creating...
                 </>
               ) : (
-                <>
+                <span className="flex items-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
-                  Create Project
-                </>
+                  <span className="text-sm">Create Project</span>
+                </span>
               )}
             </button>
           </div>

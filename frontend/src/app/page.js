@@ -4,6 +4,12 @@ import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Rajdhani } from "next/font/google";
+
+const rajdhani = Rajdhani({
+  subsets: ["latin"],
+  weight: "700",
+});
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -33,16 +39,9 @@ export default function Home() {
       <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Synapse
-              </h1>
-            </div>
+            <h1 className={`text-2xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>
+              SYNAPSE
+            </h1>
             <Link
               href="/auth"
               className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
@@ -180,14 +179,7 @@ export default function Home() {
       <footer className="bg-white border-t border-gray-200 mt-24">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-gray-900">Synapse</span>
-            </div>
+            <span className={`text-xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>SYNAPSE</span>
             <p className="text-gray-600 text-sm">
               2025 Synapse. Connecting teams, amplifying intelligence.
             </p>

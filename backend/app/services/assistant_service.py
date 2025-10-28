@@ -2,9 +2,11 @@ import google.generativeai as genai
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 import os
+import uuid
 from dotenv import load_dotenv
 from app.services.vector_db_service import search_relevant_context, add_messages_batch
 from app.services.firestore_service import get_team_messages
+from app.config import db
 
 # Load environment variables
 load_dotenv()
@@ -21,33 +23,51 @@ class AssistantService:
         """Initialize the assistant service"""
         if not GEMINI_API_KEY:
             print("Warning: GEMINI_API_KEY not found")
-        self.conversation_history = {}  # Store conversation history per user
+        # Store conversation history per user AND per project
+        # Format: {"user_id:project_id": [messages]}
+        self.conversation_history = {}
     
-    def get_conversation_history(self, user_id: str) -> List[Dict[str, str]]:
-        """Get conversation history for a user"""
-        if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
-        return self.conversation_history[user_id]
+    def _get_history_key(self, user_id: str, project_id: Optional[str] = None) -> str:
+        """Generate a unique key for conversation history"""
+        return f"{user_id}:{project_id or 'general'}"
     
-    def add_to_history(self, user_id: str, role: str, content: str):
-        """Add a message to conversation history"""
-        if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
+    def get_conversation_history(self, user_id: str, project_id: Optional[str] = None) -> List[Dict[str, str]]:
+        """Get conversation history for a user in a specific project"""
+        history_key = self._get_history_key(user_id, project_id)
+        if history_key not in self.conversation_history:
+            # Try to load from Firestore
+            self.conversation_history[history_key] = self._load_history_from_firestore(user_id, project_id)
+        return self.conversation_history[history_key]
+    
+    def add_to_history(self, user_id: str, role: str, content: str, project_id: Optional[str] = None):
+        """Add a message to conversation history and persist to Firestore"""
+        history_key = self._get_history_key(user_id, project_id)
+        if history_key not in self.conversation_history:
+            self.conversation_history[history_key] = []
         
-        self.conversation_history[user_id].append({
+        message_data = {
             "role": role,
             "content": content,
             "timestamp": datetime.now().isoformat()
-        })
+        }
+        
+        self.conversation_history[history_key].append(message_data)
         
         # Keep only last 20 messages to avoid token limits
-        if len(self.conversation_history[user_id]) > 20:
-            self.conversation_history[user_id] = self.conversation_history[user_id][-20:]
+        if len(self.conversation_history[history_key]) > 20:
+            self.conversation_history[history_key] = self.conversation_history[history_key][-20:]
+        
+        # Persist to Firestore
+        self._save_message_to_firestore(user_id, project_id, message_data)
     
-    def clear_history(self, user_id: str):
-        """Clear conversation history for a user"""
-        if user_id in self.conversation_history:
-            self.conversation_history[user_id] = []
+    def clear_history(self, user_id: str, project_id: Optional[str] = None):
+        """Clear conversation history for a user in a specific project"""
+        history_key = self._get_history_key(user_id, project_id)
+        if history_key in self.conversation_history:
+            self.conversation_history[history_key] = []
+        
+        # Clear from Firestore
+        self._clear_history_from_firestore(user_id, project_id)
     
     async def generate_response(
         self,
@@ -75,8 +95,8 @@ class AssistantService:
             # Initialize Gemini model
             model = genai.GenerativeModel('gemini-2.0-flash')
             
-            # Get conversation history
-            history = self.get_conversation_history(user_id)
+            # Get conversation history for this specific project
+            history = self.get_conversation_history(user_id, project_context)
             
             # Retrieve relevant context from vector DB if RAG is enabled
             context_messages = []
@@ -153,6 +173,14 @@ class AssistantService:
                         role = "User" if msg["role"] == "user" else "Assistant"
                         history_text += f"{role}: {msg['content']}\n"
                 
+                # Build team context from messages
+                team_context = ""
+                if team_messages:
+                    team_context = "\n".join([
+                        f"[{msg.get('sender_name', 'Unknown')}]: {msg.get('content', '')[:200]}"
+                        for msg in team_messages[:20]
+                    ])
+                
                 # Build the final prompt for the AI model
                 full_prompt = f"""
                 {system_prompt}
@@ -169,8 +197,34 @@ class AssistantService:
                 
                 **Your Response:**
                 """
+            else:
+                # Simple prompt without RAG
+                system_prompt = """You are ThinkBuddy — an intelligent AI assistant designed to help with:
+                - Code explanation and debugging
+                - Project planning and best practices
+                - Technical questions and problem-solving
+                - Code review and suggestions
+                - General programming assistance
                 
-
+                You are helpful, concise, and provide actionable insights."""
+                
+                # Format recent conversation history
+                history_text = ""
+                if history:
+                    history_text = "\n**Recent Conversation:**\n"
+                    for msg in history[-5:]:
+                        role = "User" if msg["role"] == "user" else "Assistant"
+                        history_text += f"{role}: {msg['content']}\n"
+                
+                full_prompt = f"""
+                {system_prompt}
+                
+                {history_text}
+                
+                **User Question:** {message}
+                
+                **Your Response:**
+                """
 
             # Generate response with Gemini
             response = model.generate_content(full_prompt)
@@ -180,9 +234,9 @@ class AssistantService:
             
             assistant_response = response.text.strip()
             
-            # Add to conversation history
-            self.add_to_history(user_id, "user", message)
-            self.add_to_history(user_id, "assistant", assistant_response)
+            # Add to conversation history for this specific project
+            self.add_to_history(user_id, "user", message, project_context)
+            self.add_to_history(user_id, "assistant", assistant_response, project_context)
             
             return {
                 "response": assistant_response,
@@ -258,6 +312,100 @@ Description: {description}
         except Exception as e:
             print(f"Error adding code knowledge: {str(e)}")
             return False
+    
+    def _load_history_from_firestore(self, user_id: str, project_id: Optional[str] = None) -> List[Dict[str, str]]:
+        """Load conversation history from Firestore"""
+        try:
+            if db is None:
+                return []
+            
+            project_key = project_id or "general"
+            history_ref = db.collection("thinkbuddy_chats").document(f"{user_id}_{project_key}")
+            doc = history_ref.get()
+            
+            if doc.exists:
+                data = doc.to_dict()
+                return data.get("messages", [])
+            return []
+        except Exception as e:
+            print(f"Error loading history from Firestore: {str(e)}")
+            return []
+    
+    def _save_message_to_firestore(self, user_id: str, project_id: Optional[str], message_data: Dict[str, str]):
+        """Save a single message to Firestore"""
+        try:
+            if db is None:
+                return
+            
+            project_key = project_id or "general"
+            doc_id = f"{user_id}_{project_key}"
+            history_ref = db.collection("thinkbuddy_chats").document(doc_id)
+            
+            # Get existing document
+            doc = history_ref.get()
+            
+            if doc.exists:
+                # Append to existing messages
+                history_ref.update({
+                    "messages": db.field_value.ArrayUnion([message_data]),
+                    "updated_at": datetime.now().isoformat(),
+                    "last_message_at": datetime.now().isoformat()
+                })
+            else:
+                # Create new document
+                history_ref.set({
+                    "user_id": user_id,
+                    "project_id": project_key,
+                    "messages": [message_data],
+                    "created_at": datetime.now().isoformat(),
+                    "updated_at": datetime.now().isoformat(),
+                    "last_message_at": datetime.now().isoformat()
+                })
+        except Exception as e:
+            print(f"Error saving message to Firestore: {str(e)}")
+    
+    def _clear_history_from_firestore(self, user_id: str, project_id: Optional[str] = None):
+        """Clear conversation history from Firestore"""
+        try:
+            if db is None:
+                return
+            
+            project_key = project_id or "general"
+            doc_id = f"{user_id}_{project_key}"
+            history_ref = db.collection("thinkbuddy_chats").document(doc_id)
+            
+            # Update to empty messages array
+            history_ref.update({
+                "messages": [],
+                "updated_at": datetime.now().isoformat()
+            })
+        except Exception as e:
+            print(f"Error clearing history from Firestore: {str(e)}")
+    
+    def get_all_project_chats(self, user_id: str) -> List[Dict[str, Any]]:
+        """Get all ThinkBuddy chat sessions for a user across all projects"""
+        try:
+            if db is None:
+                return []
+            
+            # Query all chats for this user
+            chats_ref = db.collection("thinkbuddy_chats").where("user_id", "==", user_id)
+            docs = chats_ref.stream()
+            
+            chats = []
+            for doc in docs:
+                data = doc.to_dict()
+                chats.append({
+                    "project_id": data.get("project_id"),
+                    "message_count": len(data.get("messages", [])),
+                    "last_message_at": data.get("last_message_at"),
+                    "created_at": data.get("created_at")
+                })
+            
+            return chats
+        except Exception as e:
+            print(f"Error getting all project chats: {str(e)}")
+            return []
 
 # Global instance
 assistant_service = AssistantService()

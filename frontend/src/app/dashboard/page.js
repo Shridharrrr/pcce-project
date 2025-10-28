@@ -36,7 +36,7 @@ const electrolize = Electrolize({
 
 const rajdhani = Rajdhani({
   subsets: ["latin"],
-  weight: "500",
+  weight: "700",
 });
 
 export default function Dashboard() {
@@ -120,29 +120,12 @@ export default function Dashboard() {
       <div className="h-screen bg-white flex flex-col">
         {/* Header */}
         <header className="bg-white  border-b border-gray-200">
-          <div className="px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-6">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-sm bg-blue-500 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <h1 className={`text-xl font-bold bg-blue-600 bg-clip-text text-transparent ${domine.className}`}>
-                    Synapse
-                  </h1>
-                </div>
+                <h1 className={`text-2xl font-extrabold tracking-wider ${rajdhani.className}`} style={{ color: '#2563eb' }}>
+                  SYNAPSE
+                </h1>
               </div>
 
               <div className="flex items-center space-x-4">
